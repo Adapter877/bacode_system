@@ -42,7 +42,7 @@
 
         <?php 
         
-        if ($_SESSION['role'] == 3) {
+        if ($_SESSION['role'] == 0) {
 
           
 
@@ -100,11 +100,7 @@
         </div>
         <ul class="pcoded-item pcoded-left-item" item-border="true" item-border-style="none" subitem-border="true">
             <li>
-                <a href="all_users.php">
-                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">All Users</span>
-                    <span class="pcoded-mcaret"></span>
-                </a>
+
             </li>
             <li>
                 <a href="add_user.php">
