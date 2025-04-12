@@ -177,24 +177,15 @@ if (isset($_SESSION['user_id'])) {
                             
                             <li class="user-profile header-notification">
                                
-                            <a href="/Blog/">
-                            <button class="btn btn-inverse">Visit Website</button>
-                                </a>
+
                                 
                                </li>
                               <li class="user-profile header-notification">
                                 <a href="#!">
-                                    <img src="assets/images/avatar-4.jpg" class="img-radius" alt="User-Profile-Image">
+                                    <img src="https://png.pngtree.com/png-vector/20220928/ourmid/pngtree-trendy-transparent-glass-icon-for-web-and-mobile-vector-png-image_48967472.jpg" class="img-radius" alt="User-Profile-Image">
                                     <span><?php echo "{$_SESSION['username']}";?></span>
-                                    <i class="ti-angle-down"></i>
-                                </a>
-                                <ul class="show-notification profile-notification">
-                                    <li>
-                                        <a href="#">
-                                            <i class="ti-user"></i> Profile
-                                        </a>
-                                    </li>
                                     
+                                </a>
                                     <li>
                                        <a href="log_out.php">
                                             <i class="ti-layout-sidebar-left"></i> Logout
