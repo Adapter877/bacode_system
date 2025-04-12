@@ -25,7 +25,7 @@ if (isset($_POST['submit'])) {
         $_SESSION['user_id'] = $user['id'];  // เก็บ id ของผู้ใช้ใน session
         $_SESSION['username'] = $user['username'];  // เก็บชื่อผู้ใช้ใน session
 
-        header('Location: index.php');  // ไปที่หน้า index.php หลังจากเข้าสู่ระบบสำเร็จ
+        header('Location: about.php');  // ไปที่หน้า index.php หลังจากเข้าสู่ระบบสำเร็จ
         exit();
     } else {
         $error = "Invalid username or password.";

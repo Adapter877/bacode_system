@@ -114,6 +114,26 @@
                 </a>
             </li>
         </ul>
+        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">Bacode</div>
+        <ul class="pcoded-item pcoded-left-item" item-border="true" item-border-style="none" subitem-border="true">
+            <li>
+                <a href="all_bacode.php">
+                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">All Bacode</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+            <li>
+                <a href="add_user.php">
+                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">Add Bacode</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
+        </ul>
 
     </div>
+
+    </div>
+    
 </nav>
