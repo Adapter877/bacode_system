@@ -1,0 +1,9 @@
+services:
+  web:
+    build:
+      context: .  # This tells Docker Compose to use the Dockerfile in the current directory
+    container_name: php_web
+    ports:
+      - "8080:80"
+    volumes:
+      - ./:/var/www/html
