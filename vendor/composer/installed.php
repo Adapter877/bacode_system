@@ -1,9 +1,9 @@
 <?php return array(
     'root' => array(
         'name' => '__root__',
-        'pretty_version' => 'dev-dev',
-        'version' => 'dev-dev',
-        'reference' => '44b70fac7fa78a77159b2ef90553cf0534ce7e14',
+        'pretty_version' => 'dev-main',
+        'version' => 'dev-main',
+        'reference' => '1aa68eb74889f42c8e6f497e324c61c1bfc088ec',
         'type' => 'library',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -11,9 +11,9 @@
     ),
     'versions' => array(
         '__root__' => array(
-            'pretty_version' => 'dev-dev',
-            'version' => 'dev-dev',
-            'reference' => '44b70fac7fa78a77159b2ef90553cf0534ce7e14',
+            'pretty_version' => 'dev-main',
+            'version' => 'dev-main',
+            'reference' => '1aa68eb74889f42c8e6f497e324c61c1bfc088ec',
             'type' => 'library',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),
@@ -34,6 +34,15 @@
             'reference' => '6d857f4d76bd4b343eac26d6b539585d2bc56493',
             'type' => 'library',
             'install_path' => __DIR__ . '/../symfony/polyfill-mbstring',
+            'aliases' => array(),
+            'dev_requirement' => false,
+        ),
+        'tecnickcom/tcpdf' => array(
+            'pretty_version' => '6.7.8',
+            'version' => '6.7.8.0',
+            'reference' => '7956f5e37863c6a569d5ccfae826f353a12a2493',
+            'type' => 'library',
+            'install_path' => __DIR__ . '/../tecnickcom/tcpdf',
             'aliases' => array(),
             'dev_requirement' => false,
         ),

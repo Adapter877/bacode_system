@@ -1,9 +1,37 @@
+version: '3.8'
+
 services:
   web:
     build:
-      context: .  # This tells Docker Compose to use the Dockerfile in the current directory
+      context: .
     container_name: php_web
     ports:
-      - "8080:80"
+      - "80:80"
     volumes:
       - ./:/var/www/html
+    depends_on:
+      - db
+    networks:
+      - backend
+
+  db:
+    image: mysql:8
+    container_name: mysql_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: php_blog
+      MYSQL_USER: myuser
+      MYSQL_PASSWORD: mypassword
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    networks:
+      - backend
+
+volumes:
+  db_data:
+
+networks:
+  backend:

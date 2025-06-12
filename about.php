@@ -4,7 +4,7 @@ include "admin/dbconfig.php";
 
 // ตรวจสอบว่า SESSION มีข้อมูล user_id หรือไม่
 if (!isset($_SESSION['user_id'])) {
-    header("Location: login.php"); // ถ้ายังไม่ล็อกอินให้เปลี่ยนไปที่หน้า login
+    header("Location: login.php");
     exit();
 }
 
@@ -21,24 +21,17 @@ mysqli_stmt_bind_result($stmt_user, $name, $username);
 mysqli_stmt_fetch($stmt_user);
 mysqli_stmt_close($stmt_user);
 
-// หากมีการค้นหาชื่อกิจกรรมจากฟอร์ม
-if (isset($_GET['search_name'])) {
-    $search_name = $_GET['search_name'];
-
-    // คำสั่ง SQL สำหรับค้นหากิจกรรมที่เกี่ยวข้องกับชื่อ
-    $sql_search = "SELECT * FROM student_activities WHERE student_name LIKE ?";
-    $stmt_search = mysqli_prepare($conn, $sql_search);
-    if ($stmt_search === false) {
-        die("ERROR: ไม่สามารถเตรียมคำสั่ง SQL ได้: " . mysqli_error($conn));
-    }
-
-    $search_term = "%" . $search_name . "%";
-    mysqli_stmt_bind_param($stmt_search, "s", $search_term);
-    mysqli_stmt_execute($stmt_search);
-    $result_search = mysqli_stmt_get_result($stmt_search);
-} else {
-    $result_search = null; // ไม่มีการค้นหา
+// ค้นหากิจกรรมของผู้ใช้ทันทีโดยใช้ชื่อจาก session
+$sql_search = "SELECT * FROM student_activities WHERE student_name LIKE ?";
+$stmt_search = mysqli_prepare($conn, $sql_search);
+if ($stmt_search === false) {
+    die("ERROR: ไม่สามารถเตรียมคำสั่ง SQL ได้: " . mysqli_error($conn));
 }
+
+$search_term = "%" . $name . "%"; // ค้นหาแบบ LIKE
+mysqli_stmt_bind_param($stmt_search, "s", $search_term);
+mysqli_stmt_execute($stmt_search);
+$result_search = mysqli_stmt_get_result($stmt_search);
 ?>
 
 <?php include "header.php"; ?>
@@ -51,7 +44,7 @@ if (isset($_GET['search_name'])) {
         <div class="col-lg-12">
           <div class="text-content">
             <h4>URU</h4>
-            <h2>ระบบคันหารหัสกิจกรรมนักศึกษา</h2>
+            <h2>ระบบค้นหารหัสกิจกรรมนักศึกษา</h2>
           </div>
         </div>
       </div>
@@ -62,23 +55,16 @@ if (isset($_GET['search_name'])) {
 <section class="about-us">
   <div class="container">
 
-  <div class="row mb-5">
-  <div class="col-lg-12">
-    <form action="" method="GET">
-      <div class="form-group">
-        <label for="student_name"><strong>กรอกชื่อเพื่อค้นหากิจกรรม:</strong></label>
-        <!-- ช่องกรอกชื่อแบบ readonly -->
-        <input type="text" class="form-control" id="student_name" name="search_name" placeholder="กรอกชื่อเพื่อค้นหา" value="<?php echo htmlspecialchars($name); ?>" readonly>
+    <!-- ไม่ต้องมีแบบฟอร์มให้กรอก -->
+    <div class="row mb-4">
+      <div class="col-lg-12">
+        <h4>ผลการค้นหากิจกรรมสำหรับ: <span class="text-primary"><?php echo htmlspecialchars($name); ?></span></h4>
       </div>
-      <button type="submit" class="btn btn-primary mt-2">ค้นหา</button>
-    </form>
-  </div>
-</div>
+    </div>
 
     <?php if ($result_search && mysqli_num_rows($result_search) > 0): ?>
       <div class="row">
         <div class="col-lg-12">
-          <h4>ผลการค้นหา (ชื่อ: <span class="text-primary"><?php echo htmlspecialchars($search_name); ?></span>)</h4>
           <div class="table-responsive">
             <table class="table table-bordered table-striped">
               <thead class="thead-dark">
@@ -111,12 +97,12 @@ if (isset($_GET['search_name'])) {
           </div>
         </div>
       </div>
-    <?php elseif ($result_search && mysqli_num_rows($result_search) == 0): ?>
-      <p>ไม่พบข้อมูลที่ตรงกับคำค้นหา</p>
+    <?php else: ?>
+      <p>ไม่พบกิจกรรมสำหรับผู้ใช้นี้</p>
     <?php endif; ?>
 
     <!-- แสดงข้อมูลของผู้ใช้ -->
-    <div class="user-info">
+    <div class="user-info mt-5">
       <h3>ข้อมูลผู้ใช้</h3>
       <p>ชื่อ: <?php echo htmlspecialchars($name); ?></p>
       <p>รหัสนักศึกษา: <?php echo htmlspecialchars($username); ?></p>
@@ -126,7 +112,4 @@ if (isset($_GET['search_name'])) {
 </section>
 
 <?php include "footer.php"; ?>
-
-<?php
-mysqli_close($conn);
-?>
+<?php mysqli_close($conn); ?>

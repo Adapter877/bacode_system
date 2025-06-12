@@ -1,4 +1,8 @@
-
+<?php
+session_start();
+$role = $_SESSION['role'] ?? null;
+$username = $_SESSION['username'] ?? null;
+?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -77,7 +81,7 @@
     <header class="background-header">
       <nav class="navbar navbar-expand-lg">
         <div class="container">
-          <a class="navbar-brand" href="index.php"><h2>ระบบคันหารหัสกิจกรรมนักศึกษา<em>.</em></h2></a>
+          <a class="navbar-brand" href="about.php"><h2>ระบบคันหารหัสกิจกรรมนักศึกษา<em>.</em></h2></a>
           <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
             <span class="navbar-toggler-icon"></span>
           </button>
@@ -126,9 +130,7 @@
               </li>-->
               
 <?php
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+session_start();
 
 $role = $_SESSION['role'] ?? null;
 $username = $_SESSION['username'] ?? null;

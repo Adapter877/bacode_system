@@ -130,6 +130,13 @@
                     <span class="pcoded-mcaret"></span>
                 </a>
             </li>
+            <li>
+                <a href="from_bacode.php">
+                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">From Bacode</span>
+                    <span class="pcoded-mcaret"></span>
+                </a>
+            </li>
         </ul>
 
     </div>
