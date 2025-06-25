@@ -1,5 +1,5 @@
 <?php 
 
-$conn = mysqli_connect('192.168.2.22','root','password','php_blog');
+$conn = mysqli_connect('192.168.2.7','root','rootpassword','php_blog');
 
 ?>

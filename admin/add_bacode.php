@@ -112,7 +112,14 @@ if (isset($_POST['submit'])) {
                         </div>
                         <div class="form-group">
                           <label>รหัสบาร์โค้ด</label>
-                          <input type="text" name="barcode" class="form-control" value="<?php echo htmlspecialchars($barcode); ?>">
+                          <div class="input-group">
+                            <input type="text" name="barcode" class="form-control" value="<?php echo htmlspecialchars($barcode); ?>" id="barcodeInput">
+                            <div class="input-group-append">
+                              <button type="button" class="btn btn-info" onclick="showBarcodeHistory()">
+                                <i class="feather icon-list"></i> ประวัติบาร์โค้ด
+                              </button>
+                            </div>
+                          </div>
                         </div>
                         <div class="form-group">
                           <label>ข้อมูลติดต่อ</label>
@@ -132,7 +139,27 @@ if (isset($_POST['submit'])) {
                         </div>
                       </form>
 
+                      <!-- Barcode History Modal -->
+                      <div class="modal fade" id="barcodeHistoryModal" tabindex="-1" role="dialog">
+                        <div class="modal-dialog" role="document">
+                          <div class="modal-content">
+                            <div class="modal-header">
+                              <h5 class="modal-title">ประวัติบาร์โค้ดที่นำเข้า</h5>
+                              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                              </button>
+                            </div>
+                            <div class="modal-body">
+                              <div id="barcodeList"></div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
                       <script>
+                      let barcodeHistory = [];
+
+                      // Modify your existing PDF extraction code to store barcodes in history
                       document.querySelector('button[name="extract_pdf"]').onclick = function(e) {
                           e.preventDefault();
                           
@@ -175,6 +202,10 @@ if (isset($_POST['submit'])) {
                           .then(response => response.json())
                           .then(data => {
                               if (data.success) {
+                                  // Add barcodes to history
+                                  barcodeHistory = barcodeHistory.concat(data.barcodes);
+                                  localStorage.setItem('barcodeHistory', JSON.stringify(barcodeHistory));
+
                                   let barcodesList = data.barcodes.map((barcode, index) => `
                                       <div class="barcode-item">
                                           รหัสบาร์โค้ด ${index + 1}: ${barcode}
@@ -211,6 +242,36 @@ if (isset($_POST['submit'])) {
                               `;
                           });
                       };
+
+                      // Function to show barcode history modal
+                      function showBarcodeHistory() {
+                          const storedHistory = localStorage.getItem('barcodeHistory');
+                          if (storedHistory) {
+                              barcodeHistory = JSON.parse(storedHistory);
+                          }
+
+                          let historyHTML = '<div class="list-group">';
+                          barcodeHistory.forEach((barcode, index) => {
+                              historyHTML += `
+                                  <a href="#" class="list-group-item list-group-item-action" 
+                                     onclick="selectBarcode('${barcode}')">
+                                      ${barcode}
+                                  </a>
+                              `;
+                          });
+                          historyHTML += '</div>';
+
+                          document.getElementById('barcodeList').innerHTML = 
+                              barcodeHistory.length ? historyHTML : '<p class="text-center">ไม่พบประวัติบาร์โค้ด</p>';
+                          
+                          $('#barcodeHistoryModal').modal('show');
+                      }
+
+                      // Function to select barcode from history
+                      function selectBarcode(barcode) {
+                          document.getElementById('barcodeInput').value = barcode;
+                          $('#barcodeHistoryModal').modal('hide');
+                      }
                       </script>
                     </div>
                   </div>
