@@ -25,10 +25,10 @@ if (isset($_POST['submit'])) {
         $_SESSION['user_id'] = $user['id'];  // เก็บ id ของผู้ใช้ใน session
         $_SESSION['username'] = $user['username'];  // เก็บชื่อผู้ใช้ใน session
 
-        header('Location: about.php');  // ไปที่หน้า index.php หลังจากเข้าสู่ระบบสำเร็จ
+        header('Location: about.php');  // ไปที่หน้า about.php หลังจากเข้าสู่ระบบสำเร็จ
         exit();
     } else {
-        $error = "Invalid username or password.";
+        $error = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
     }
 
     mysqli_stmt_close($stmt);
@@ -36,9 +36,9 @@ if (isset($_POST['submit'])) {
 ?>
 <!-- ส่วนของฟอร์มล็อกอิน -->
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 <head>
-    <title>Login</title>
+    <title>เข้าสู่ระบบ</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -67,19 +67,19 @@ if (isset($_POST['submit'])) {
             <hr class="mb-6 border-white/20" />
 
             <div class="mb-4">
-                <input type="text" class="w-full px-4 py-3 bg-white/10 text-white placeholder-white/70 rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-inner" placeholder="Username" name="username" required>
+                <input type="text" class="w-full px-4 py-3 bg-white/10 text-white placeholder-white/70 rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-400 shadow-inner" placeholder="ชื่อผู้ใช้" name="username" required>
             </div>
 
             <div class="mb-6">
-                <input type="password" class="w-full px-4 py-3 bg-white/10 text-white placeholder-white/70 rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner" placeholder="Password" name="password" required>
+                <input type="password" class="w-full px-4 py-3 bg-white/10 text-white placeholder-white/70 rounded-lg border border-white/30 focus:outline-none focus:ring-2 focus:ring-purple-400 shadow-inner" placeholder="รหัสผ่าน" name="password" required>
             </div>
 
             <button type="submit" name="submit" class="w-full py-3 bg-white/20 text-white font-semibold rounded-lg shadow-md hover:bg-white/30 transition duration-300 border border-white/30 hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500">
-                Login
+                เข้าสู่ระบบ
             </button>
 
             <a href="register.php" class="block w-full text-center mt-4 py-3 bg-white/10 text-white font-semibold rounded-lg shadow-md hover:bg-white/20 transition duration-300 border border-white/30 hover:shadow-xl">
-                Register
+                สมัครสมาชิก
             </a>
         </form>
     </div>

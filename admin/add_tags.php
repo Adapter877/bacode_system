@@ -5,7 +5,6 @@ if (!$_SESSION['role']== 0){
     echo "<script>window.location.href='index.php'</script>";
 }
 
-
 if (isset($_POST['submit'])) {
 
     $name =mysqli_real_escape_string($conn,$_POST['name']);
@@ -18,7 +17,7 @@ if (isset($_POST['submit'])) {
     $error="";
     $success="";
     if ($result>0) {
-       $error = "Tags already exits";
+       $error = "แท็กนี้มีอยู่แล้ว";
     }
 
     else {
@@ -28,11 +27,11 @@ if (isset($_POST['submit'])) {
         $query2 = mysqli_query($conn,$sql2);
 
         if ($query2) {
-           $success = "Data inserted Successfully";
+           $success = "บันทึกข้อมูลสำเร็จ";
            echo "<script>window.location.href='all_tags.php'</script>";
         }
         else{
-            $success = "Data not inserted";
+            $success = "ไม่สามารถบันทึกข้อมูลได้";
         }
      }
 
@@ -53,7 +52,7 @@ if (isset($_POST['submit'])) {
                                     <!-- Basic Form Inputs card start -->
                                     <div class="card">
                                         <div class="card-header">
-                                            <h3>Add Tags</h3>
+                                            <h3>เพิ่มแท็ก</h3>
                                             <?php 
                                             if (isset($_POST['submit'])) {
                                                 echo"<h2>$error</h2>";
@@ -63,20 +62,20 @@ if (isset($_POST['submit'])) {
                                             ?>
                                         </div>
                                         <div class="card-block">
-                                            <h4 class="sub-title">Inputs Details</h4>
+                                            <h4 class="sub-title">รายละเอียดข้อมูล</h4>
                                             <form action="<?php $_SERVER['PHP_SELF'] ?>" method="POST">
                                                 <div class="form-group row">
-                                                    <label class="col-sm-2 col-form-label">Name</label>
+                                                    <label class="col-sm-2 col-form-label">ชื่อแท็ก</label>
                                                     <div class="col-sm-10">
                                                         <input type="text" class="form-control" name="name"
-                                                            placeholder="Type your Name" spellcheck="false"
+                                                            placeholder="กรอกชื่อแท็ก" spellcheck="false"
                                                             data-ms-editor="true">
                                                     </div>
                                                 </div>
                                                
 
                                                 <button type="submit" class="btn btn-primary waves-effect waves-light"
-                                                    name="submit">Add</button>
+                                                    name="submit">เพิ่มแท็ก</button>
 
                                             </form>
                                         </div>

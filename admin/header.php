@@ -30,62 +30,52 @@ if (isset($_SESSION['user_id'])) {
 
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="th">
 
 <head>
     <title>
     <?php
-             
-            
              if ( current(explode('.',basename($_SERVER['PHP_SELF']))) == 'index') {
- 
-               $active_class = "Dashboard";
-               
+               $active_class = "แดชบอร์ด";
              }
              elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'all_posts') {
-               $active_class = "All Posts";
+               $active_class = "โพสต์ทั้งหมด";
              } 
              elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'add_post') {
-               $active_class = "Add Post";
+               $active_class = "เพิ่มโพสต์";
              } 
              elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'edit_post') {
-               $active_class = "Edit Post";
+               $active_class = "แก้ไขโพสต์";
              } 
              elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'all_categories') {
-               $active_class = "All Categories";
+               $active_class = "หมวดหมู่ทั้งหมด";
              } 
              elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'add_categories') {
-               $active_class = "Add category";
+               $active_class = "เพิ่มหมวดหมู่";
              }
-              elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'edit_categories') {
-               $active_class = "Edit category";
+             elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'edit_categories') {
+               $active_class = "แก้ไขหมวดหมู่";
              }
-              
-              elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'all_tags') {
-               $active_class = "All Tags";
+             elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'all_tags') {
+               $active_class = "แท็กทั้งหมด";
              } 
-              elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'add_tags') {
-               $active_class = "Add Tag";
+             elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'add_tags') {
+               $active_class = "เพิ่มแท็ก";
              } 
-              elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'edit_tag') {
-               $active_class = "Edit Tag";
+             elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'edit_tag') {
+               $active_class = "แก้ไขแท็ก";
              } 
-             
-              elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'all_users') {
-               $active_class = "All Users";
+             elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'all_users') {
+               $active_class = "ผู้ใช้งานทั้งหมด";
              } 
-             
-              elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'add_user') {
-               $active_class = "Add User";
+             elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'add_user') {
+               $active_class = "เพิ่มผู้ใช้งาน";
              } 
-              elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'edit_user') {
-               $active_class = "Edit User";
+             elseif (current(explode('.',basename($_SERVER['PHP_SELF']))) == 'edit_user') {
+               $active_class = "แก้ไขผู้ใช้งาน";
              } 
-             
              else{
- 
-               $active_class ="404 not found";
-               
+               $active_class ="ไม่พบหน้า";
              }
         ?>
         
@@ -168,6 +158,11 @@ if (isset($_SESSION['user_id'])) {
 
                                 
                                </li>
+                                                                   <li>
+                                       <a href="/about.php">
+                                            <i class="ti-layout-sidebar-left"></i> กลับไปยังเว็บไซต์
+                                        </a>
+                                    </li>
                               <li class="user-profile header-notification">
                                 <a href="#!">
                                     <img src="https://png.pngtree.com/png-vector/20220928/ourmid/pngtree-trendy-transparent-glass-icon-for-web-and-mobile-vector-png-image_48967472.jpg" class="img-radius" alt="User-Profile-Image">
@@ -176,7 +171,7 @@ if (isset($_SESSION['user_id'])) {
                                 </a>
                                     <li>
                                        <a href="log_out.php">
-                                            <i class="ti-layout-sidebar-left"></i> Logout
+                                            <i class="ti-layout-sidebar-left"></i> ออกจากระบบ
                                         </a>
                                     </li>
                                 </ul>
@@ -186,4 +181,3 @@ if (isset($_SESSION['user_id'])) {
                     </div>
                 </div>
             </nav>
-            

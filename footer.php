@@ -12,9 +12,8 @@
           </div> -->
           <div class="col-lg-12">
             <div class="copyright-text">
-              <p>Copyright 2025 Adapter87
-                    
-                 | Developed By :  <a rel="nofollow" href="about.php" target="_parent">Adapter87</a></p>
+              <p>Copyright 2025 Noey Laddawan 
+                 | Developed By :  <a rel="nofollow" href="about.php" target="_parent">Noey Laddawan </a></p>
             </div>
           </div>
         </div>

@@ -134,28 +134,11 @@ if (isset($_POST['submit'])) {
                                                 <div class="form-group row">
                                                     <label class="col-sm-2 col-form-label">เลือกบทบาท</label>
                                                     <div class="col-sm-10">
-                                                        <select name="select" class="form-control" value="<?php echo $name; ?>">
-
-                                                        <?php 
-                                                        
-
-                                                        if ($role == 0 ) {
-
-                                                            echo "<option name='0' value='0' selected>ผู้ดูแลระบบ</option>";
-                                                            echo "<option name='1' value='1'>ผู้เขียน</option>";
-                                                            
-                                                        }
-                                                        else{
-
-                                                            
-                                                            echo "<option name='0' value='0' >ผู้ดูแลระบบ</option>";
-                                                            echo "<option name='1' value='1' selected>ผู้เขียน</option>";
-                                                        }
-                                                        
-
-                                                        ?>
-                                                        
-
+                                                        <select name="select" class="form-control">
+                                                            <option value="option">เลือกสิทธิ์</option>
+                                                            <option value="0" <?php if($role == 0) echo "selected"; ?>>ผู้ดูแลระบบ</option>
+                                                            <option value="1" <?php if($role == 1) echo "selected"; ?>>สโมสรนักศึกษา</option>
+                                                            <option value="3" <?php if($role == 3) echo "selected"; ?>>นักศึกษา</option>
                                                         </select>
                                                     </div>
                                                 </div>

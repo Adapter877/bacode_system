@@ -4,7 +4,6 @@ if (!$_SESSION['role']== 0){
     echo "<script>window.location.href='index.php'</script>";
 }
 
-
 if (isset($_POST['submit'])) {
 
     $name =mysqli_real_escape_string($conn,$_POST['name']);
@@ -24,7 +23,7 @@ if (isset($_POST['submit'])) {
     $error="";
     $success="";
     if ($result>0) {
-       $error = "Username already exits";
+       $error = "ชื่อผู้ใช้นี้มีอยู่แล้ว";
     }
 
     else {
@@ -34,11 +33,11 @@ if (isset($_POST['submit'])) {
         $query2 = mysqli_query($conn,$sql2);
 
         if ($query2) {
-           $success = "Data inserted Successfully";
+           $success = "บันทึกข้อมูลสำเร็จ";
            echo "<script>window.location.href='all_users.php'</script>";
         }
         else{
-            $success = "Data not inserted";
+            $success = "ไม่สามารถบันทึกข้อมูลได้";
         }
      }
 
@@ -59,7 +58,7 @@ if (isset($_POST['submit'])) {
                                     <!-- Basic Form Inputs card start -->
                                     <div class="card">
                                         <div class="card-header">
-                                            <h3>Add user</h3>
+                                            <h3>เพิ่มผู้ใช้งาน</h3>
                                             <?php 
                                             if (isset($_POST['submit'])) 
                                             {
@@ -70,62 +69,59 @@ if (isset($_POST['submit'])) {
                                             ?>
                                         </div>
                                         <div class="card-block">
-                                            <h4 class="sub-title">Inputs Details</h4>
+                                            <h4 class="sub-title">รายละเอียดข้อมูล</h4>
                                             <form action="<?php $_SERVER['PHP_SELF'] ?>" method="POST">
                                                 <div class="form-group row">
-                                                    <label class="col-sm-2 col-form-label">Name</label>
+                                                    <label class="col-sm-2 col-form-label">ชื่อ-นามสกุล</label>
                                                     <div class="col-sm-10">
                                                         <input type="text" class="form-control" name="name"
-                                                            placeholder="Type your Name" spellcheck="false"
+                                                            placeholder="กรอกชื่อ-นามสกุล" spellcheck="false"
                                                             data-ms-editor="true">
                                                     </div>
                                                 </div>
                                                 <div class="form-group row">
-                                                    <label class="col-sm-2 col-form-label">Username</label>
+                                                    <label class="col-sm-2 col-form-label">ชื่อผู้ใช้</label>
                                                     <div class="col-sm-10">
                                                         <input type="text" class="form-control" name="username"
-                                                            placeholder="Type your Username" spellcheck="false"
+                                                            placeholder="กรอกชื่อผู้ใช้" spellcheck="false"
                                                             data-ms-editor="true">
                                                     </div>
                                                 </div>
 
                                                 <div class="form-group row">
-                                                    <label class="col-sm-2 col-form-label">Email</label>
+                                                    <label class="col-sm-2 col-form-label">อีเมล</label>
                                                     <div class="col-sm-10">
                                                         <input type="email" class="form-control" name="email"
-                                                            placeholder="Enter your Email" spellcheck="false"
+                                                            placeholder="กรอกอีเมล" spellcheck="false"
                                                             data-ms-editor="true">
                                                     </div>
                                                 </div>
 
                                                 <div class="form-group row">
-                                                    <label class="col-sm-2 col-form-label">Password</label>
+                                                    <label class="col-sm-2 col-form-label">รหัสผ่าน</label>
                                                     <div class="col-sm-10">
                                                         <input type="password" class="form-control" name="password"
-                                                            placeholder="Password input">
+                                                            placeholder="กรอกรหัสผ่าน">
                                                     </div>
                                                 </div>
 
                                                 <div class="form-group row">
-                                                    <label class="col-sm-2 col-form-label">Select Role</label>
+                                                    <label class="col-sm-2 col-form-label">เลือกสิทธิ์</label>
                                                     <div class="col-sm-10">
                                                         <select name="select" class="form-control">
-                                                            <option value="option">Select Role</option>
-                                                            <option name="0" value="0">Admin</option>
-                                                            <option name="1" value="1">Editor</option>
-
+                                                            <option value="option">เลือกสิทธิ์</option>
+                                                            <option name="0" value="0">ผู้ดูแลระบบ</option>
+                                                            <option name="1" value="1">สโมสรนักศึกษา</option>
+                                                            <option name="1" value="3">นักศึกษา</option>
                                                         </select>
                                                     </div>
                                                 </div>
 
                                                 <button type="submit" class="btn btn-primary waves-effect waves-light"
-                                                    name="submit">Submit</button>
+                                                    name="submit">เพิ่มผู้ใช้งาน</button>
 
                                             </form>
                                         </div>
-
-
-
                                     </div>
                                 </div>
 
@@ -140,4 +136,3 @@ if (isset($_POST['submit'])) {
 
         </div>
         <?php include "footer.php"; ?>
-        

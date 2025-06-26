@@ -20,7 +20,7 @@ mysqli_stmt_close($stmt);
 
 // ถ้าไม่ใช่ role 3 (เช่น Admin)
 if ($role == 3) {
-    echo "<h3 style='text-align:center; margin-top:50px; color:red;'>You do not have permission to view this page.</h3>";
+    header("Location: /404.php?redirect=about");
     exit();
 }
 ?>

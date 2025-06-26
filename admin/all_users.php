@@ -10,7 +10,6 @@ $query = mysqli_query($conn,$sql);
 
 ?>
 
-
 <div class="pcoded-main-container">
     <div class="pcoded-wrapper">
         <?php include "sidebar.php"; ?>
@@ -22,98 +21,78 @@ $query = mysqli_query($conn,$sql);
                         <div class="page-body">
                             <div class="card">
                                 <div class="card-header">
-                                    <h3>All Users</h3>
-
+                                    <h3>ผู้ใช้งานทั้งหมด</h3>
                                 </div>
                                 <div class="card-block table-border-style">
                                     <div class="table-responsive">
                                         <table class="table">
                                             <thead class="table-inverse">
                                                 <tr>
-                                                    <th>Serial No.</th>
-                                                    <th>Name</th>
-                                                    <th>Username</th>
-                                                    <th>Email</th>
-                                                    <th>Role</th>
-                                                    <th>Created at</th>
-                                                    <th>Edit</th>
-                                                    <th>Delete</th>
+                                                    <th>ลำดับ</th>
+                                                    <th>ชื่อ-นามสกุล</th>
+                                                    <th>ชื่อผู้ใช้</th>
+                                                    <th>อีเมล</th>
+                                                    <th>สิทธิ์</th>
+                                                    <th>วันที่สร้าง</th>
+                                                    <th>แก้ไข</th>
+                                                    <th>ลบ</th>
                                                 </tr>
-
                                             </thead>
                                             <tbody>
                                                 <?php 
-                                            $i=1;
-                                            while ($row = mysqli_fetch_assoc($query)) {
-                                                $id =  $row['id'];                                          
-                                                $name =  $row['name'];                                          
-                                                $username = $row['username'];
-                                                $email = $row['email'];                                            
-                                                $role = $row['role'];                                              
-                                                $created = $row['created_at'];                                              
-                                           
-                                            
-                                            ?>
-
+                                                $i=1;
+                                                while ($row = mysqli_fetch_assoc($query)) {
+                                                    $id =  $row['id'];                                          
+                                                    $name =  $row['name'];                                          
+                                                    $username = $row['username'];
+                                                    $email = $row['email'];                                            
+                                                    $role = $row['role'];                                              
+                                                    $created = $row['created_at'];                                              
+                                                ?>
                                                 <tr>
                                                     <td><?php echo $i++; ?></td>
                                                     <td><?php echo $name; ?></td>
                                                     <td><?php echo $username; ?></td>
                                                     <td><?php echo $email; ?></td>
-                                                   
-
-                                                    
-                                                    
-                                                    <?php 
-                                                    if ($role == 0) {
-                                                        echo '<td><div class="label-main">
-                                                            <label class="label label-primary">Admin</label>
-                                                        </div></td>';
-                                                    } else if ($role == 3) {
-                                                        echo '<td><div class="label-main">
-                                                            <label class="label label-warning">นักศึกษา</label>
-                                                        </div></td>';
-                                                    } else {
-                                                        echo '<td><div class="label-main">
-                                                            <label class="label label-success">Editor</label>
-                                                        </div></td>';
-                                                    }
-                                                    ?>
-                                                    
-                                                    
-                                                    ?>
-                                                    <td><?php echo date( "m/d/Y", strtotime($created)); ?></td>
-                                                    <td><a type="submit"
-                                                            href="edit_user.php?id=<?php echo $id ?>"><button
-                                                                class="btn btn-info"><i
-                                                                    class="ti-pencil-alt"></i></button><a>
-
+                                                    <td>
+                                                        <div class="label-main">
+                                                            <?php
+                                                            if ($role == 0) {
+                                                                echo '<label class="label label-primary">ผู้ดูแลระบบ</label>';
+                                                            } else if ($role == 1) {
+                                                                echo '<label class="label label-success">สโมสรนักศึกษา</label>';
+                                                            } else if ($role == 3) {
+                                                                echo '<label class="label label-warning">นักศึกษา</label>';
+                                                            } else {
+                                                                echo '<label class="label label-default">ไม่ทราบสิทธิ์</label>';
+                                                            }
+                                                            ?>
+                                                        </div>
                                                     </td>
-                                                    <td><a type="submit"
-                                                            href="delete_user.php?id=<?php echo $id ?>"><button
-                                                                class="btn btn-danger"><i
-                                                                    class="ti-trash"></i></button><a>
-
+                                                    <td><?php echo date( "d/m/Y", strtotime($created)); ?></td>
+                                                    <td>
+                                                        <a type="submit" href="edit_user.php?id=<?php echo $id ?>">
+                                                            <button class="btn btn-info"><i class="ti-pencil-alt"></i></button>
+                                                        </a>
                                                     </td>
-                                                    
+                                                    <td>
+                                                        <a type="submit" href="delete_user.php?id=<?php echo $id ?>">
+                                                            <button class="btn btn-danger"><i class="ti-trash"></i></button>
+                                                        </a>
+                                                    </td>
                                                 </tr>
                                                 <?php } ?>
-
                                             </tbody>
                                         </table>
                                     </div>
                                 </div>
                             </div>
                         </div>
-
-                        <div id="styleSelector">
-
-                        </div>
+                        <div id="styleSelector"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 </div>
 <?php include "footer.php"; ?>

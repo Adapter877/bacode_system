@@ -47,34 +47,30 @@ if ($role == 0) {
                         <div class="page-body">
                             <div class="card">
                                 <div class="card-header">
-                                    <h3>All posts</h3>
-
+                                    <h3>โพสต์ทั้งหมด</h3>
                                 </div>
                                 <div class="card-block table-border-style">
                                     <div class="table-responsive">
                                         <table class="table">
                                             <thead class="table-inverse">
                                                 <tr>
-                                                    <th>Serial No.</th>
-                                                    <th>Post Title</th>
-                                                    <th>Post content</th>
-                                                    <th>Post image</th>
-                                                    <th>Category name</th>
-                                                    <th>Tag name</th>
-                                                    <th>Author</th>
-                                                    <th>Created at</th>
-                                                    <th>Edit</th>
-                                                    <th>Delete</th>
+                                                    <th>ลำดับ</th>
+                                                    <th>หัวข้อโพสต์</th>
+                                                    <th>เนื้อหาโพสต์</th>
+                                                    <th>รูปภาพโพสต์</th>
+                                                    <th>ชื่อหมวดหมู่</th>
+                                                    <th>ชื่อแท็ก</th>
+                                                    <th>ผู้เขียน</th>
+                                                    <th>วันที่สร้าง</th>
+                                                    <th>แก้ไข</th>
+                                                    <th>ลบ</th>
                                                 </tr>
-
                                             </thead>
                                             <tbody>
-
                                                 <?php
                                                 $i = 1;
                                                 while ($row = mysqli_fetch_assoc($query)) {
                                                     $id =  $row['posts_id'];
-
                                                     $posts_title =  $row['posts_title'];
                                                     $posts_content =  $row['posts_content'];
                                                     $posts_image =  $row['posts_image'];
@@ -83,14 +79,12 @@ if ($role == 0) {
                                                     $author =  $row['author'];
                                                     $created = $row['created_at'];
                                                 ?>
-
                                                     <tr>
                                                         <td><?php echo $id ?></td>
                                                         <td><?php echo substr($posts_title, 0, 15) . "...";  ?></td>
                                                         <td><?php echo substr($posts_content, 0, 25) . "..."; ?></td>
                                                         <td> <img src="<?php echo $posts_image; ?>" width="50px" height="50px"></td>
                                                         <td><?php echo $category_name; ?></td>
-
                                                         <td>
                                                             <div class="label-main">
                                                                 <label class="label label-success"><?php echo $tag_name; ?></label>
@@ -101,90 +95,64 @@ if ($role == 0) {
                                                                 <label class="label label-primary"><?php echo $author; ?></label>
                                                             </div>
                                                         </td>
-
-
-
-                                                        <td><?php echo date("d-M-Y", strtotime($created)); ?></td>
-
-                                                        <td><a type="submit" href="edit_post.php?id=<?php echo $id ?>"><button class="btn btn-info"><i class="ti-pencil-alt"></i></button><a>
-
+                                                        <td><?php echo date("d-m-Y", strtotime($created)); ?></td>
+                                                        <td>
+                                                            <a type="submit" href="edit_post.php?id=<?php echo $id ?>">
+                                                                <button class="btn btn-info"><i class="ti-pencil-alt"></i></button>
+                                                                <!-- แก้ไข -->
+                                                            </a>
                                                         </td>
-                                                        <td><a type="submit" href="delete_post.php?id=<?php echo $id ?>"><button class="btn btn-danger"><i class="ti-trash"></i></button></a></td>
+                                                        <td>
+                                                            <a type="submit" href="delete_post.php?id=<?php echo $id ?>">
+                                                                <button class="btn btn-danger"><i class="ti-trash"></i></button>
+                                                                <!-- ลบ -->
+                                                            </a>
+                                                        </td>
                                                     </tr>
-
-
                                                 <?php } ?>
-
                                             </tbody>
                                         </table>
                                         <nav aria-label="Page navigation example">
                                             <ul class="pagination justify-content-center m-5">
-
-
                                                 <?php
-
                                                 $sql2 = "SELECT * FROM posts";
-
                                                 $query2 = mysqli_query($conn, $sql2);
-
                                                 $total_page = mysqli_num_rows($query2);
-
-
                                                 $page_number = ceil($total_page / $per_page);
-
-
-
                                                 for ($i = 1; $i <= $page_number; $i++) {
-
                                                     if (!isset($_GET['page'])) {
-
-
                                                         if ($i == 1) {
-
-
-
                                                             $page_active = 'active';
                                                         } else {
                                                             $page_active = '';
                                                         }
                                                     } else {
                                                         $page = $_GET['page'];
-
                                                         $page_active = 'active';
-
                                                         if ($page == $i) {
-
-
-
                                                             $page_active = 'active';
                                                         } else {
                                                             $page_active = '';
                                                         }
                                                     }
                                                 ?>
-
-                                                    <li class="page-item <?php echo $page_active; ?>"><a class="page-link p-3" href="all_posts.php?page=<?php echo $i; ?>"><?php echo $i; ?></a></li>
-
+                                                    <li class="page-item <?php echo $page_active; ?>">
+                                                        <a class="page-link p-3" href="all_posts.php?page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                                                    </li>
                                                 <?php
-
                                                 }
                                                 ?>
                                             </ul>
                                         </nav>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
-
-                        <div id="styleSelector">
-
-                        </div>
+                        <div id="styleSelector"></div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
 </div>
 <?php include "footer.php"; ?>

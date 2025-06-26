@@ -1,5 +1,7 @@
 <?php 
-
+header("Location: /login.php");
+exit();
+?>
 include "dbconfig.php";
 session_start();
 $error="";

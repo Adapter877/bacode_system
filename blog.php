@@ -8,8 +8,8 @@
           <div class="row">
             <div class="col-lg-12">
               <div class="text-content">
-                <h4>Recent Posts</h4>
-                <h2>Our Recent Blog Entries</h2>
+                <h4>โพสต์ล่าสุด</h4>
+                <h2>รายการโพสต์ล่าสุดของเรา</h2>
               </div>
             </div>
           </div>

@@ -59,7 +59,7 @@
         ?>
 
         <!-- Start Categories -->
-        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">Categories</div>
+        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">หมวดหมู่</div>
         <ul class="pcoded-item pcoded-left-item" item-border="true" item-border-style="none" subitem-border="true">
             <li>
                 <a href="all_categories.php">
@@ -83,57 +83,57 @@
             <li>
                 <a href="all_tags.php">
                     <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">กิจกรรมทั้งหมด</span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">แท็กทั้งหมด</span>
                     <span class="pcoded-mcaret"></span>
                 </a>
             </li>
             <li>
                 <a href="add_tags.php">
                     <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">เพิ่มกิจกรรม</span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">เพิ่มแท็ก</span>
                     <span class="pcoded-mcaret"></span>
                 </a>
             </li>
         </ul>
 
         <!-- Start Users -->
-        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">Users</div>
+        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">ผู้ใช้งาน</div>
         <ul class="pcoded-item pcoded-left-item" item-border="true" item-border-style="none" subitem-border="true">
             <li>
                 <a href="all_users.php">
                     <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">ผู้ใช้ทั้งหมด</span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">ผู้ใช้งานทั้งหมด</span>
                     <span class="pcoded-mcaret"></span>
                 </a>
             </li>
             <li>
                 <a href="add_user.php">
                     <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">เพิ่มผู้ใช้</span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">เพิ่มผู้ใช้งาน</span>
                     <span class="pcoded-mcaret"></span>
                 </a>
             </li>
         </ul>
-        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">Bacode</div>
+        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">บาร์โค้ด</div>
         <ul class="pcoded-item pcoded-left-item" item-border="true" item-border-style="none" subitem-border="true">
             <li>
                 <a href="all_bacode.php">
                     <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">All Bacode</span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">บาร์โค้ดทั้งหมด</span>
                     <span class="pcoded-mcaret"></span>
                 </a>
             </li>
             <li>
                 <a href="add_bacode.php">
                     <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">Add Bacode</span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">เพิ่มบาร์โค้ดด้วย (PDF)</span>
                     <span class="pcoded-mcaret"></span>
                 </a>
             </li>
             <li>
                 <a href="from_bacode.php">
                     <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">From Bacode</span>
+                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">เพิ่มบาร์โค้ด</span>
                     <span class="pcoded-mcaret"></span>
                 </a>
             </li>

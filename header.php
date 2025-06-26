@@ -81,77 +81,60 @@ $username = $_SESSION['username'] ?? null;
     <header class="background-header">
       <nav class="navbar navbar-expand-lg">
         <div class="container">
-          <a class="navbar-brand" href="about.php"><h2>ระบบคันหารหัสกิจกรรมนักศึกษา<em>.</em></h2></a>
-          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+          <a class="navbar-brand" href="about.php"><h2>ระบบค้นหารหัสกิจกรรมนักศึกษา<em>.</em></h2></a>
+          <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="สลับเมนูนำทาง">
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarResponsive">
             <ul class="navbar-nav ml-auto">            
-            <?php
-             
-            
-            if ( basename($_SERVER['PHP_SELF']) == 'index.php') {
-
-              $active_class = "active";
-              
-            }
-            elseif (basename($_SERVER['PHP_SELF']) == 'about.php') {
-              $active_class1 = "active";
-            } 
-            elseif (basename($_SERVER['PHP_SELF']) == 'blog.php') {
-              $active_class2 = "active";
-            } 
-          
-            elseif (basename($_SERVER['PHP_SELF']) == 'contact.php') {
-              $active_class4 = "active";
-            } 
-            
-            else{
-
-              $active_class = "";
-              $active_class1 = "";
-              
-            }
-             ?>
-              <!-- <li class="nav-item <?php echo  $active_class; ?>">
-                <a class="nav-link" href="index.php">Home
-                  <span class="sr-only">(current)</span>
-                </a>
-              </li> -->
-              <li class="nav-item <?php echo  $active_class1; ?>">
-                <a class="nav-link" href="about.php">ค้นหากิจกรรม</a>
-              </li>
-              
-              <li class="nav-item <?php echo  $active_class2; ?>">
-                <a class="nav-link" href="blog.php">ลงทะเบียนกิจกรรม</a>
-              </li>
-             <!--   <li class="nav-item <?php echo  $active_class4; ?>">
-                <a class="nav-link" href="contact.php">Contact Us</a>
-              </li>-->
-              
 <?php
-session_start();
 
-$role = $_SESSION['role'] ?? null;
-$username = $_SESSION['username'] ?? null;
-
-if (!$username) {
-    // ถ้ายังไม่ได้ login
-    echo '<li class="nav-item"><a class="nav-link" href="admin/login.php">Login</a></li>';
-} else {
-    // ถ้า login แล้ว
-    if ($role != 3) {
-        // ถ้าไม่ใช่ role 3 ให้แสดง Dashboard
-    }
-
-    // แสดง logout สำหรับทุกคนที่ login
-    echo '<li class="nav-item"><a class="nav-link" href="log_out.php">Logout</a></li>';
+if ( basename($_SERVER['PHP_SELF']) == 'index.php') {
+  $active_class = "active";
+}
+elseif (basename($_SERVER['PHP_SELF']) == 'about.php') {
+  $active_class1 = "active";
+} 
+elseif (basename($_SERVER['PHP_SELF']) == 'blog.php') {
+  $active_class2 = "active";
+} 
+elseif (basename($_SERVER['PHP_SELF']) == 'contact.php') {
+  $active_class4 = "active";
+} 
+else{
+  $active_class = "";
+  $active_class1 = "";
 }
 ?>
+<!-- <li class="nav-item <?php echo  $active_class; ?>">
+  <a class="nav-link" href="index.php">หน้าหลัก
+    <span class="sr-only">(หน้าปัจจุบัน)</span>
+  </a>
+</li> -->
+<li class="nav-item <?php echo  $active_class1; ?>">
+  <a class="nav-link" href="about.php">ค้นหากิจกรรม</a>
+</li>
+<li class="nav-item <?php echo  $active_class2; ?>">
+  <a class="nav-link" href="blog.php">ลงทะเบียนกิจกรรม</a>
+</li>
+<!--   <li class="nav-item <?php echo  $active_class4; ?>">
+  <a class="nav-link" href="contact.php">ติดต่อเรา</a>
+</li>-->
 
-                
-
-
+<?php
+if (!$username) {
+    // ถ้ายังไม่ได้เข้าสู่ระบบ
+    echo '<li class="nav-item"><a class="nav-link" href="admin/login.php">เข้าสู่ระบบ</a></li>';
+} else {
+    // ถ้าเข้าสู่ระบบแล้ว
+    if (intval($role) === 0) {
+        // เฉพาะ admin หรือ role = 0 เท่านั้นที่แสดงปุ่ม "จัดการข้อมูล"
+        echo '<li class="nav-item"><a class="nav-link" href="admin/">จัดการข้อมูล</a></li>';
+    }
+    // แสดงออกจากระบบสำหรับทุกคนที่เข้าสู่ระบบแล้ว
+    echo '<li class="nav-item"><a class="nav-link" href="log_out.php">ออกจากระบบ</a></li>';
+}
+?>
             </ul>
           </div>
         </div>
