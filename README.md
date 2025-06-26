@@ -4,8 +4,8 @@
 
 1. **Clone โปรเจกต์**
     ```bash
-    git clone https://github.com/Adapter877/Blog-php-mysql-main.git
-    cd Blog-php-mysql-main
+    git clone https://github.com/Adapter877/bacode_system
+    cd bacode_system
     ```
 
 2. **สร้างไฟล์ `docker-compose.yml`**
