@@ -3,30 +3,44 @@ include "admin/dbconfig.php";
 session_start();
 $error = "";
 
-// ตรวจสอบว่ามีการส่งข้อมูลจากฟอร์มหรือไม่
+// ส่งฟอร์ม
 if (isset($_POST['submit'])) {
     $username = isset($_POST['username']) ? trim($_POST['username']) : '';
     $password = isset($_POST['password']) ? trim($_POST['password']) : '';
 
     $pass = md5($password);
 
-    $check_sql = "SELECT * FROM user_info WHERE username = ? AND password = ?";
-    $stmt = mysqli_prepare($conn, $check_sql);
-    mysqli_stmt_bind_param($stmt, "ss", $username, $pass);
-    mysqli_stmt_execute($stmt);
-    $result = mysqli_stmt_get_result($stmt);
+    $check_sql = "SELECT id, username, password, role, name, email, student_id, major
+                  FROM user_info
+                  WHERE username = ? AND password = ?
+                  LIMIT 1";
+    if ($stmt = mysqli_prepare($conn, $check_sql)) {
+        mysqli_stmt_bind_param($stmt, "ss", $username, $pass);
+        mysqli_stmt_execute($stmt);
+        $result = mysqli_stmt_get_result($stmt);
 
-    if (mysqli_num_rows($result) > 0) {
-        $user = mysqli_fetch_assoc($result);
-        $_SESSION['user_id'] = $user['id'];
-        $_SESSION['username'] = $user['username'];
+        if ($result && $user = mysqli_fetch_assoc($result)) {
+            // เริ่ม session ใหม่อย่างปลอดภัย
+            session_regenerate_id(true);
 
-        header('Location: about.php');
-        exit();
+            $_SESSION['user_id']    = $user['id'];
+            $_SESSION['username']   = $user['username'];
+            $_SESSION['role']       = $user['role'];        // <-- สำคัญ!
+            // เก็บไว้ใช้ใน dropdown โปรไฟล์
+            $_SESSION['full_name']  = $user['name'] ?? '';
+            $_SESSION['email']      = $user['email'] ?? '';
+            $_SESSION['student_id'] = $user['student_id'] ?? '';
+            $_SESSION['major']      = $user['major'] ?? '';
+
+            header('Location: about.php');
+            exit();
+        } else {
+            $error = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
+        }
+        mysqli_stmt_close($stmt);
     } else {
-        $error = "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง";
+        $error = "ไม่สามารถเชื่อมต่อระบบได้ โปรดลองอีกครั้ง";
     }
-    mysqli_stmt_close($stmt);
 }
 ?>
 <!DOCTYPE html>
@@ -36,18 +50,13 @@ if (isset($_POST['submit'])) {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-    <!-- Bootstrap CSS -->
     <link rel="stylesheet" type="text/css" href="assets/css/bootstrap/css/bootstrap.min.css">
-
-    <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- Custom Style -->
     <link rel="stylesheet" type="text/css" href="style.css">
 </head>
-<body style="background-color: #1f2937; background-size: cover; background-position: center; background-attachment: fixed;" class="min-h-screen flex items-center justify-center text-white">
+<body style=" background-color: #1f2937; background-size: cover; background-position: center; background-attachment: fixed;" class="min-h-screen flex items-center justify-center text-white">
 
-<section class="login w-full px-4" style="max-width: 400px;"> <!-- ความกว้างตายตัว -->
+<section class="login w-full px-4" style="max-width: 400px;">
     <div class="bg-white/20 backdrop-blur-xl border border-white/30 rounded-2xl shadow-2xl p-8 ring-1 ring-white/10">
         <form action="<?php echo htmlspecialchars($_SERVER['PHP_SELF']); ?>" method="POST">
             <?php if (!empty($error)) : ?>
