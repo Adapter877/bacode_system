@@ -5,6 +5,8 @@ TemplateMo 551 Stand Blog
 https://templatemo.com/tm-551-stand-blog
 
 */
+.navbar .dropdown-menu.profile-menu { width: 320px !important; }
+.profile-grid { grid-template-columns: 110px 1fr !important; }
 
 body {
   font-family: 'Roboto', sans-serif;

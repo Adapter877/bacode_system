@@ -1,13 +1,10 @@
 <?php include "header.php"; 
-if (!$_SESSION['role']== 0){
-
+if (!$_SESSION['role'] == 0){
     echo "<script>window.location.href='index.php'</script>";
 }
 
 $sql = "SELECT * FROM user_info";
-
 $query = mysqli_query($conn,$sql);
-
 ?>
 
 <div class="pcoded-main-container">
@@ -35,19 +32,18 @@ $query = mysqli_query($conn,$sql);
                                                     <th>สิทธิ์</th>
                                                     <th>วันที่สร้าง</th>
                                                     <th>แก้ไข</th>
-                                                    <th>ลบ</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 <?php 
-                                                $i=1;
+                                                $i = 1;
                                                 while ($row = mysqli_fetch_assoc($query)) {
-                                                    $id =  $row['id'];                                          
-                                                    $name =  $row['name'];                                          
+                                                    $id       = $row['id'];                                          
+                                                    $name     = $row['name'];                                          
                                                     $username = $row['username'];
-                                                    $email = $row['email'];                                            
-                                                    $role = $row['role'];                                              
-                                                    $created = $row['created_at'];                                              
+                                                    $email    = $row['email'];                                            
+                                                    $role     = $row['role'];                                              
+                                                    $created  = $row['created_at'];                                              
                                                 ?>
                                                 <tr>
                                                     <td><?php echo $i++; ?></td>
@@ -69,15 +65,10 @@ $query = mysqli_query($conn,$sql);
                                                             ?>
                                                         </div>
                                                     </td>
-                                                    <td><?php echo date( "d/m/Y", strtotime($created)); ?></td>
+                                                    <td><?php echo date("d/m/Y", strtotime($created)); ?></td>
                                                     <td>
-                                                        <a type="submit" href="edit_user.php?id=<?php echo $id ?>">
+                                                        <a href="edit_user.php?id=<?php echo $id ?>">
                                                             <button class="btn btn-info"><i class="ti-pencil-alt"></i></button>
-                                                        </a>
-                                                    </td>
-                                                    <td>
-                                                        <a type="submit" href="delete_user.php?id=<?php echo $id ?>">
-                                                            <button class="btn btn-danger"><i class="ti-trash"></i></button>
                                                         </a>
                                                     </td>
                                                 </tr>
