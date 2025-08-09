@@ -1,288 +1,397 @@
 <?php
-include "header.php";
+// admin/import_barcodes.php
+// นำเข้าบาร์โค้ดจาก PDF/CSV/TXT → อัปเดต student_activities แบบปลอดภัย
+// คุณสมบัติ:
+//  - ต้องเลือกกิจกรรมก่อนอัปโหลด (อัปเดตเฉพาะกิจกรรมนั้นเท่านั้น)
+//  - โหมด SID: (student_id => barcode)
+//  - โหมด SEQ: มีแต่ barcode → ใส่ให้ “แถวของกิจกรรมนี้ที่ barcode ยังว่าง” ตามลำดับ
+//  - พรีวิวแสดงรายชื่อผู้สมัครที่จะถูกอัปเดต + สถานะ (OK/ซ้ำ/ไม่พบ/มีค่าแล้ว)
+//  - เช็คบาร์โค้ดซ้ำทั้งในไฟล์และในฐานข้อมูลก่อนอัปเดตจริง
+//  - ไม่ insert แถวใหม่ | อัปเดตเฉพาะที่มีอยู่และยังว่างเท่านั้น
 
-require_once __DIR__ . '/../vendor/autoload.php'; // path ของ Composer autoload
+session_start();
+require_once __DIR__ . '/dbconfig.php';
 
-$error = [];
-$msg = "";
-$barcode = "";
+// อนุญาตเฉพาะ admin
+if (!isset($_SESSION['role']) || (string)$_SESSION['role'] !== '0') {
+    http_response_code(403);
+    echo "Permission denied.";
+    exit();
+}
 
-// กรณีกดปุ่ม "ดึงข้อมูลจาก PDF"
-if (isset($_POST['extract_pdf'])) {
-    if (isset($_FILES['barcode_pdf']) && $_FILES['barcode_pdf']['error'] == UPLOAD_ERR_OK) {
-        $pdf_tmp_path = $_FILES['barcode_pdf']['tmp_name'];
+$errors = [];
+$notices = [];
+$updated = 0;
+$skipped = 0;
 
-        $parser = new \Smalot\PdfParser\Parser();
-        $pdf = $parser->parseFile($pdf_tmp_path);
-        $text = $pdf->getText();
-
-        if (preg_match('/[A-Z0-9\-]{6,}/', $text, $matches)) {
-            $barcode = $matches[0];
-            $msg = '<div class="alert alert-success">ดึงรหัสบาร์โค้ดจาก PDF สำเร็จ: ' . $barcode . '</div>';
+/* -------------------- Utilities -------------------- */
+function hasPdftotext(): bool {
+    $which = @shell_exec("which pdftotext 2>/dev/null");
+    return is_string($which) && trim($which) !== '';
+}
+function pdfToTextFlexible(string $pdfPath): ?string {
+    if (hasPdftotext()) {
+        $cmd = "pdftotext -layout -nopgbrk " . escapeshellarg($pdfPath) . " -";
+        $out = @shell_exec($cmd);
+        if (is_string($out) && $out !== '') return $out;
+    }
+    if (class_exists('\\Smalot\\PdfParser\\Parser')) {
+        try {
+            $parser = new \Smalot\PdfParser\Parser();
+            $pdf = $parser->parseFile($pdfPath);
+            $text = $pdf->getText();
+            if (is_string($text) && $text !== '') return $text;
+        } catch (\Throwable $e) {}
+    }
+    return null;
+}
+/** barcode สมเหตุสมผล? */
+function looks_like_barcode(string $s): bool {
+    if (!preg_match('/^(?=[A-Za-z0-9._-]{8,64}$)(?=.*[A-Za-z])[A-Za-z0-9._-]+$/u', $s)) return false;
+    if (preg_match('/^AC\d{4}-[A-Za-z0-9]{4}-[A-Za-z0-9]{4}$/', $s)) return true;
+    return true;
+}
+function parseTextToData(string $text): array {
+    // คืนค่า ['mode'=>'sid'|'seq', 'data'=>mapping|list]
+    $lines = preg_split("/\r\n|\r|\n/", $text);
+    $mapSid = [];
+    $seq = [];
+    foreach ($lines as $raw) {
+        $line = trim($raw); if ($line==='') continue;
+        if (preg_match('/\b(\d{8,13})\b/u', $line, $m)) {
+            $sid = $m[1];
+            $rest = trim(preg_replace('/\b'.preg_quote($sid,'/').'\b/u', '', $line, 1));
+            if (preg_match_all('/[A-Za-z0-9._-]{4,64}/u', $rest, $mm)) {
+                foreach ($mm[0] as $tok) if (looks_like_barcode($tok)) { $mapSid[$sid] = $tok; break; }
+            }
         } else {
-            $msg = '<div class="alert alert-warning">ไม่พบรหัสบาร์โค้ดในไฟล์ PDF</div>';
+            if (preg_match_all('/[A-Za-z0-9._-]{4,64}/u', $line, $mm)) {
+                foreach ($mm[0] as $tok) if (looks_like_barcode($tok)) $seq[] = $tok;
+            }
         }
+    }
+    if (!empty($mapSid)) return ['mode'=>'sid', 'data'=>$mapSid];
+    if (!empty($seq))    return ['mode'=>'seq', 'data'=>$seq];
+    if (preg_match_all('/[A-Za-z0-9._-]{8,64}/u', $text, $mm)) {
+        $extra = array_values(array_filter($mm[0], 'looks_like_barcode'));
+        if (!empty($extra)) return ['mode'=>'seq', 'data'=>$extra];
+    }
+    return ['mode'=>'empty','data'=>[]];
+}
+function parseCsvToData(string $csvPath): array {
+    // CSV 2 คอลัมน์: student_id, barcode
+    $map = [];
+    if (($h=fopen($csvPath,'r'))!==false) {
+        while(($row=fgetcsv($h))!==false) {
+            if (count($row)<2) continue;
+            $sid = preg_replace('/\D+/','', trim((string)$row[0]));
+            $bc  = trim((string)$row[1]);
+            if ($sid!=='' && looks_like_barcode($bc)) $map[$sid]=$bc;
+        }
+        fclose($h);
+    }
+    return ['mode'=> empty($map)?'empty':'sid', 'data'=>$map];
+}
+/** barcode ซ้ำในฐานข้อมูลหรือไม่ */
+function db_barcode_exists(mysqli $conn, string $bc): bool {
+    $sql="SELECT 1 FROM student_activities WHERE barcode = ? LIMIT 1";
+    $st=mysqli_prepare($conn,$sql);
+    mysqli_stmt_bind_param($st,"s",$bc);
+    mysqli_stmt_execute($st);
+    $res=mysqli_stmt_get_result($st);
+    $exists = $res && mysqli_fetch_row($res);
+    mysqli_stmt_close($st);
+    return (bool)$exists;
+}
+
+/* -------------------- โหลดกิจกรรมให้เลือก -------------------- */
+$activity_opts=[];
+$ro = mysqli_query($conn,"SELECT DISTINCT activity_name FROM student_activities WHERE activity_name<>'' ORDER BY activity_name ASC");
+if($ro){ while($r=mysqli_fetch_assoc($ro)){ $activity_opts[]=$r['activity_name']; } }
+
+$selected_activity = $_POST['activity_name'] ?? ($_SESSION['import_activity'] ?? '');
+
+/* -------------------- Handle upload -------------------- */
+if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['mode']??'')==='upload') {
+    if ($selected_activity==='') {
+        $errors[]="กรุณาเลือกกิจกรรมก่อน";
+    } elseif (!isset($_FILES['file']) || $_FILES['file']['error']!==UPLOAD_ERR_OK) {
+        $errors[]="อัปโหลดไฟล์ไม่สำเร็จ";
     } else {
-        $msg = '<div class="alert alert-danger">กรุณาเลือกไฟล์ PDF ที่ถูกต้อง</div>';
+        $tmp=$_FILES['file']['tmp_name'];
+        $ext=strtolower(pathinfo($_FILES['file']['name'],PATHINFO_EXTENSION));
+        if ($ext==='pdf') {
+            $txt = pdfToTextFlexible($tmp);
+            if ($txt===null) {
+                $errors[]="อ่าน PDF ไม่ได้ (ไม่มี pdftotext/pdfparser) — ใช้ .txt/.csv แทนชั่วคราวได้";
+            } else {
+                $parsed = parseTextToData($txt);
+            }
+        } elseif ($ext==='txt') {
+            $txt=@file_get_contents($tmp);
+            if(!is_string($txt) || $txt===''){ $errors[]="อ่าน .txt ไม่ได้"; }
+            else { $parsed = parseTextToData($txt); }
+        } elseif ($ext==='csv') {
+            $parsed = parseCsvToData($tmp);
+        } else {
+            $errors[]="รองรับ .pdf / .txt / .csv เท่านั้น";
+        }
+
+        if (empty($errors)) {
+            if (empty($parsed) || $parsed['mode']==='empty' || empty($parsed['data'])) {
+                $errors[]="ไม่พบข้อมูลที่ใช้ได้ในไฟล์";
+            } else {
+                // เตรียม "รายการที่จะอัปเดต" พร้อมพรีวิวชื่อ/สถานะ
+                $mode = $parsed['mode'];
+                $data = $parsed['data'];
+                $preview_rows = []; // rows ready for preview/apply
+
+                // ดึง set ของ barcode ในไฟล์ เพื่อตรวจซ้ำในไฟล์เอง
+                $file_seen = [];
+
+                if ($mode==='sid') {
+                    // ดึงผู้สมัครของกิจกรรมนี้ทั้งหมด
+                    $st = mysqli_prepare($conn,
+                        "SELECT id, student_id, student_name, barcode
+                         FROM student_activities
+                         WHERE activity_name = ?");
+                    mysqli_stmt_bind_param($st,"s",$selected_activity);
+                    mysqli_stmt_execute($st);
+                    $rs = mysqli_stmt_get_result($st);
+                    $by_sid = [];
+                    while($row=$rs->fetch_assoc()){
+                        $by_sid[(string)$row['student_id']] = $row; // อาจมีซ้ำ sid ก็เอาแถวล่าสุดไว้
+                    }
+                    mysqli_stmt_close($st);
+
+                    foreach ($data as $sid=>$bc) {
+                        $row = $by_sid[(string)$sid] ?? null;
+                        $status = 'OK';
+                        $reason = '';
+                        if (!$row) {
+                            $status='SKIP'; $reason='ไม่พบผู้สมัครในกิจกรรมนี้';
+                        } elseif (!empty($row['barcode'])) {
+                            $status='SKIP'; $reason='แถวนั้นมีบาร์โค้ดอยู่แล้ว';
+                        } elseif (!looks_like_barcode($bc)) {
+                            $status='SKIP'; $reason='รูปแบบบาร์โค้ดไม่ถูกต้อง';
+                        } elseif (isset($file_seen[$bc])) {
+                            $status='SKIP'; $reason='บาร์โค้ดซ้ำในไฟล์';
+                        } elseif (db_barcode_exists($conn,$bc)) {
+                            $status='SKIP'; $reason='บาร์โค้ดนี้ถูกใช้ไปแล้วในฐานข้อมูล';
+                        }
+                        $file_seen[$bc]=true;
+
+                        $preview_rows[] = [
+                            'target_id'   => $row['id'] ?? null,
+                            'student_id'  => (string)$sid,
+                            'student_name'=> $row['student_name'] ?? '-',
+                            'barcode'     => $bc,
+                            'status'      => $status,
+                            'reason'      => $reason,
+                        ];
+                    }
+                } else { // seq
+                    // ดึง “แถวของกิจกรรมนี้ที่ยังไม่มี barcode” เรียงตาม id
+                    $st = mysqli_prepare($conn,
+                        "SELECT id, student_id, student_name
+                         FROM student_activities
+                         WHERE activity_name = ? AND (barcode IS NULL OR barcode = '')
+                         ORDER BY id ASC");
+                    mysqli_stmt_bind_param($st,"s",$selected_activity);
+                    mysqli_stmt_execute($st);
+                    $rs = mysqli_stmt_get_result($st);
+                    $eligible = $rs ? $rs->fetch_all(MYSQLI_ASSOC) : [];
+                    mysqli_stmt_close($st);
+
+                    // จำกัดจำนวนเท่าที่มีคน
+                    $n = min(count($data), count($eligible));
+                    for ($i=0; $i<$n; $i++){
+                        $bc  = (string)$data[$i];
+                        $row = $eligible[$i];
+                        $status='OK'; $reason='';
+                        if (!looks_like_barcode($bc)) {
+                            $status='SKIP'; $reason='รูปแบบบาร์โค้ดไม่ถูกต้อง';
+                        } elseif (isset($file_seen[$bc])) {
+                            $status='SKIP'; $reason='บาร์โค้ดซ้ำในไฟล์';
+                        } elseif (db_barcode_exists($conn,$bc)) {
+                            $status='SKIP'; $reason='บาร์โค้ดนี้ถูกใช้ไปแล้วในฐานข้อมูล';
+                        }
+                        $file_seen[$bc]=true;
+
+                        $preview_rows[] = [
+                            'target_id'   => (int)$row['id'],
+                            'student_id'  => (string)$row['student_id'],
+                            'student_name'=> (string)$row['student_name'],
+                            'barcode'     => $bc,
+                            'status'      => $status,
+                            'reason'      => $reason,
+                        ];
+                    }
+
+                    // ถ้ามี barcode เกินจำนวนคน ให้โชว์เป็น “เกินโควต้า” เผื่อผู้ใช้จะรู้
+                    for ($i=$n; $i<count($data); $i++){
+                        $bc=(string)$data[$i];
+                        $status='SKIP'; $reason='เกินจำนวนผู้สมัครที่ยังว่าง';
+                        if (!looks_like_barcode($bc)) { $reason='รูปแบบบาร์โค้ดไม่ถูกต้อง'; }
+                        elseif (isset($file_seen[$bc])) { $reason='บาร์โค้ดซ้ำในไฟล์'; }
+                        elseif (db_barcode_exists($conn,$bc)) { $reason='บาร์โค้ดนี้ถูกใช้ไปแล้วในฐานข้อมูล'; }
+                        $file_seen[$bc]=true;
+                        $preview_rows[] = [
+                            'target_id'=>null,'student_id'=>'-','student_name'=>'-',
+                            'barcode'=>$bc,'status'=>$status,'reason'=>$reason,
+                        ];
+                    }
+                }
+
+                $_SESSION['import_preview']  = [
+                    'activity' => $selected_activity,
+                    'rows'     => $preview_rows,
+                ];
+                $_SESSION['import_activity'] = $selected_activity;
+                $notices[] = "อ่านไฟล์สำเร็จ: เตรียมอัปเดต ".count($preview_rows)." รายการ (ตรวจสอบในตารางพรีวิวด้านล่าง)";
+            }
+        }
     }
 }
 
-// กรณีกดปุ่ม "submit"
-if (isset($_POST['submit'])) {
-    $student_name = mysqli_real_escape_string($conn, $_POST['student_name']);
-    $student_id = mysqli_real_escape_string($conn, $_POST['student_id']);
-    $major = mysqli_real_escape_string($conn, $_POST['major']);
-    $activity_name = mysqli_real_escape_string($conn, $_POST['activity_name']);
-    $activity_hours = mysqli_real_escape_string($conn, $_POST['activity_hours']);
-    $barcode = mysqli_real_escape_string($conn, $_POST['barcode']);
-    $contact = mysqli_real_escape_string($conn, $_POST['contact']);
-    $date_joined = mysqli_real_escape_string($conn, $_POST['date_joined']);
-
-    $check_sql = "SELECT activity_name FROM student_activities WHERE student_id = '$student_id'";
-    $check_query = mysqli_query($conn, $check_sql);
-
-    $duplicate = false;
-    while ($row = mysqli_fetch_assoc($check_query)) {
-        if ($row['activity_name'] === $activity_name) {
-            $duplicate = true;
-            break;
-        }
-    }
-
-    if ($duplicate) {
-        $msg = '<div class="alert alert-danger">รหัสนักศึกษาและชื่อกิจกรรมนี้มีอยู่ในระบบแล้ว</div>';
+/* -------------------- Apply -------------------- */
+if ($_SERVER['REQUEST_METHOD']==='POST' && ($_POST['mode']??'')==='apply') {
+    $pv = $_SESSION['import_preview'] ?? null;
+    if (!$pv || empty($pv['rows']) || empty($pv['activity'])) {
+        $errors[]="ไม่มีข้อมูลสำหรับอัปเดต";
     } else {
-        $sql = "INSERT INTO student_activities (
-                    student_name, student_id, major,
-                    activity_name, activity_hours, barcode,
-                    contact, date_joined
-                ) VALUES (
-                    '$student_name', '$student_id', '$major',
-                    '$activity_name', '$activity_hours', '$barcode',
-                    '$contact', '$date_joined'
-                )";
-
-        $query = mysqli_query($conn, $sql);
-
-        if ($query) {
-            $msg = '<div class="alert alert-success">บันทึกข้อมูลเรียบร้อยแล้ว</div>';
-        } else {
-            $msg = '<div class="alert alert-danger">เกิดข้อผิดพลาดในการบันทึกข้อมูล</div>';
+        $rows=$pv['rows']; $activity=$pv['activity'];
+        $st = mysqli_prepare($conn,"UPDATE student_activities SET barcode=? WHERE id=? AND (barcode IS NULL OR barcode='')");
+        foreach ($rows as $r) {
+            if ($r['status']!=='OK') { $skipped++; continue; }
+            // กันกรณีระหว่างพรีวิวกับ apply มีใครไปใช้บาร์โค้ดนี้แล้ว
+            if (db_barcode_exists($conn,$r['barcode'])) { $skipped++; continue; }
+            mysqli_stmt_bind_param($st,"si",$r['barcode'],$r['target_id']);
+            if (mysqli_stmt_execute($st) && mysqli_stmt_affected_rows($st)>0) $updated++; else $skipped++;
         }
+        mysqli_stmt_close($st);
+        unset($_SESSION['import_preview'], $_SESSION['import_activity']);
+        if ($updated || $skipped) $notices[]="อัปเดตสำเร็จ: $updated แถว, ข้าม: $skipped แถว";
     }
 }
+
+/* -------------------- Read preview back -------------------- */
+$pv = $_SESSION['import_preview'] ?? null;
+$selected_activity = $_SESSION['import_activity'] ?? $selected_activity;
 ?>
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<title>นำเข้าบาร์โค้ดจาก PDF/CSV/TXT</title>
+<link rel="stylesheet" href="../vendor/bootstrap/css/bootstrap.min.css">
+<style>
+body{ background:#f8fafc; }
+.container-narrow{ max-width: 1050px; }
+.code{ font-family: ui-monospace, Menlo, Consolas, "Liberation Mono", monospace; }
+.badge-status{ font-size:.85rem; }
+</style>
+</head>
+<body>
+<div class="container container-narrow py-4">
 
-<div class="pcoded-main-container">
-  <div class="pcoded-wrapper">
-    <?php include "sidebar.php"; ?>
-    <div class="pcoded-content">
-      <div class="pcoded-inner-content">
-        <div class="main-body">
-          <div class="page-wrapper">
-            <div class="page-body">
-              <div class="row justify-content-center">
-                <div class="col-md-8">
-                  <div class="card">
-                    <div class="card-header">
-                      <h3>เพิ่มข้อมูลกิจกรรมนักศึกษา</h3>
-                      <?php if (!empty($msg)) echo $msg; ?>
-                    </div>
-                    <div class="card-block">
-                      <form method="POST" action="" enctype="multipart/form-data">
-                        <div class="form-group">
-                          <label>ชื่อ - สกุล</label>
-                          <input type="text" name="student_name" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                          <label>รหัสนักศึกษา</label>
-                          <input type="text" name="student_id" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                          <label>หลักสูตร</label>
-                          <input type="text" name="major" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                          <label>ชื่อกิจกรรม</label>
-                          <input type="text" name="activity_name" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                          <label>ชั่วโมงกิจกรรมที่ได้รับ</label>
-                          <input type="number" step="0.1" name="activity_hours" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                          <label>รหัสบาร์โค้ด</label>
-                          <div class="input-group">
-                            <input type="text" name="barcode" class="form-control" value="<?php echo htmlspecialchars($barcode); ?>" id="barcodeInput">
-                            <div class="input-group-append">
-                              <button type="button" class="btn btn-info" onclick="showBarcodeHistory()">
-                                <i class="feather icon-list"></i> ประวัติบาร์โค้ด
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                        <div class="form-group">
-                          <label>ข้อมูลติดต่อ</label>
-                          <input type="text" name="contact" class="form-control">
-                        </div>
-                        <div class="form-group">
-                          <label>วันที่เข้าร่วม</label>
-                          <input type="date" name="date_joined" class="form-control" required>
-                        </div>
-                        <div class="form-group">
-                          <label>อัปโหลด PDF เพื่อดึงรหัสบาร์โค้ด</label>
-                          <input type="file" name="barcode_pdf" class="form-control-file" accept=".pdf">
-                        </div>
-                        <div class="form-group d-flex gap-2">
-                          <button type="submit" name="extract_pdf" class="btn btn-warning mt-3">ดึงข้อมูลจาก PDF</button>
-                          <button type="submit" name="submit" class="btn btn-primary mt-3">บันทึกข้อมูล</button>
-                        </div>
-                      </form>
+  <?php foreach ($notices as $n): ?>
+    <div class="alert alert-info"><?= htmlspecialchars($n) ?></div>
+  <?php endforeach; ?>
+  <?php foreach ($errors as $e): ?>
+    <div class="alert alert-danger"><?= nl2br(htmlspecialchars($e)) ?></div>
+  <?php endforeach; ?>
 
-                      <!-- Barcode History Modal -->
-                      <div class="modal fade" id="barcodeHistoryModal" tabindex="-1" role="dialog">
-                        <div class="modal-dialog" role="document">
-                          <div class="modal-content">
-                            <div class="modal-header">
-                              <h5 class="modal-title">ประวัติบาร์โค้ดที่นำเข้า</h5>
-                              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                <span aria-hidden="true">&times;</span>
-                              </button>
-                            </div>
-                            <div class="modal-body">
-                              <div id="barcodeList"></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+  <div class="card mb-4">
+    <div class="card-header">อัปโหลดไฟล์ (PDF / CSV / TXT)</div>
+    <div class="card-body">
+      <form method="post" enctype="multipart/form-data">
+        <input type="hidden" name="mode" value="upload">
+        <div class="mb-3">
+          <label class="form-label">เลือกกิจกรรม</label>
+          <select name="activity_name" class="form-control" required>
+            <option value="">-- เลือกกิจกรรม --</option>
+            <?php foreach ($activity_opts as $opt): ?>
+              <option value="<?= htmlspecialchars($opt) ?>" <?= $opt===$selected_activity?'selected':'' ?>>
+                <?= htmlspecialchars($opt) ?>
+              </option>
+            <?php endforeach; ?>
+          </select>
+        </div>
+        <div class="mb-3">
+          <input type="file" name="file" class="form-control" accept=".pdf,.csv,.txt" required>
+          <small class="text-muted d-block mt-2">
+            • PDF ต้องเป็นไฟล์ข้อความ (ไม่ใช่ภาพล้วน) | ไม่มี pdftotext? ใช้ TXT/CSV ได้<br>
+            • CSV: <code>student_id,barcode</code> | TXT/PDF ดึงได้ทั้งแบบมีรหัส นศ. หรือมีแต่บาร์โค้ด
+          </small>
+        </div>
+        <button class="btn btn-primary">อ่านไฟล์และพรีวิว</button>
+      </form>
+    </div>
+  </div>
 
-                      <script>
-                      let barcodeHistory = [];
-
-                      // Modify your existing PDF extraction code to store barcodes in history
-                      document.querySelector('button[name="extract_pdf"]').onclick = function(e) {
-                          e.preventDefault();
-                          
-                          const pdfInput = document.querySelector('input[name="barcode_pdf"]');
-                          if (!pdfInput.files.length) {
-                              alert('กรุณาเลือกไฟล์ PDF ก่อน');
-                              return;
-                          }
-
-                          const formData = new FormData();
-                          formData.append('barcode_pdf', pdfInput.files[0]);
-                          formData.append('extract_pdf', '1');
-
-                          const popup = window.open('', 'PDF Extract', 'width=600,height=600');
-                          popup.document.write(`
-                              <html>
-                              <head>
-                                  <title>กำลังดึงข้อมูลจาก PDF</title>
-                                  <style>
-                                      body { font-family: Arial; background: #f5f5f5; padding: 20px; }
-                                      .loading { text-align: center; margin-top: 50px; }
-                                      .result { margin-top: 20px; padding: 15px; border-radius: 5px; }
-                                      .success { background: #d4edda; color: #155724; }
-                                      .error { background: #f8d7da; color: #721c24; }
-                                      button { padding: 8px 15px; border-radius: 4px; cursor: pointer; margin: 5px; }
-                                      .barcode-list { margin: 15px 0; }
-                                      .barcode-item { margin: 10px 0; padding: 10px; background: #fff; border-radius: 4px; }
-                                  </style>
-                              </head>
-                              <body>
-                                  <div class="loading">กำลังดึงข้อมูลจาก PDF...</div>
-                              </body>
-                              </html>
-                          `);
-
-                          fetch('extract_pdf.php', {
-                              method: 'POST',
-                              body: formData
-                          })
-                          .then(response => response.json())
-                          .then(data => {
-                              if (data.success) {
-                                  // Add barcodes to history
-                                  barcodeHistory = barcodeHistory.concat(data.barcodes);
-                                  localStorage.setItem('barcodeHistory', JSON.stringify(barcodeHistory));
-
-                                  let barcodesList = data.barcodes.map((barcode, index) => `
-                                      <div class="barcode-item">
-                                          รหัสบาร์โค้ด ${index + 1}: ${barcode}
-                                          <button onclick="window.opener.document.querySelector('input[name=barcode]').value='${barcode}'; window.close();">
-                                              ใช้รหัสนี้
-                                          </button>
-                                      </div>
-                                  `).join('');
-
-                                  popup.document.querySelector('.loading').innerHTML = `
-                                      <div class="result success">
-                                          พบรหัสบาร์โค้ดทั้งหมด ${data.count} รหัส<br>
-                                          <div class="barcode-list">
-                                              ${barcodesList}
-                                          </div>
-                                          <button onclick="window.close()">ปิด</button>
-                                      </div>
-                                  `;
-                              } else {
-                                  popup.document.querySelector('.loading').innerHTML = `
-                                      <div class="result error">
-                                          ${data.message}<br><br>
-                                          <button onclick="window.close()">ปิด</button>
-                                      </div>
-                                  `;
-                              }
-                          })
-                          .catch(error => {
-                              popup.document.querySelector('.loading').innerHTML = `
-                                  <div class="result error">
-                                      เกิดข้อผิดพลาด: ${error.message}<br><br>
-                                      <button onclick="window.close()">ปิด</button>
-                                  </div>
-                              `;
-                          });
-                      };
-
-                      // Function to show barcode history modal
-                      function showBarcodeHistory() {
-                          const storedHistory = localStorage.getItem('barcodeHistory');
-                          if (storedHistory) {
-                              barcodeHistory = JSON.parse(storedHistory);
-                          }
-
-                          let historyHTML = '<div class="list-group">';
-                          barcodeHistory.forEach((barcode, index) => {
-                              historyHTML += `
-                                  <a href="#" class="list-group-item list-group-item-action" 
-                                     onclick="selectBarcode('${barcode}')">
-                                      ${barcode}
-                                  </a>
-                              `;
-                          });
-                          historyHTML += '</div>';
-
-                          document.getElementById('barcodeList').innerHTML = 
-                              barcodeHistory.length ? historyHTML : '<p class="text-center">ไม่พบประวัติบาร์โค้ด</p>';
-                          
-                          $('#barcodeHistoryModal').modal('show');
-                      }
-
-                      // Function to select barcode from history
-                      function selectBarcode(barcode) {
-                          document.getElementById('barcodeInput').value = barcode;
-                          $('#barcodeHistoryModal').modal('hide');
-                      }
-                      </script>
-                    </div>
-                  </div>
-                </div>
-              </div> <!-- row -->
-            </div> <!-- page-body -->
-          </div> <!-- page-wrapper -->
+  <?php if ($pv && !empty($pv['rows'])): ?>
+    <div class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>พรีวิวข้อมูล (กิจกรรม: <b><?= htmlspecialchars($pv['activity']) ?></b>) — ทั้งหมด: <?= count($pv['rows']) ?> รายการ</span>
+        <form method="post">
+          <input type="hidden" name="mode" value="apply">
+          <button class="btn btn-success btn-sm" onclick="return confirm('ยืนยันอัปเดตเฉพาะรายการที่สถานะ OK หรือไม่?');">
+            ยืนยันอัปเดต
+          </button>
+        </form>
+      </div>
+      <div class="card-body p-0">
+        <div class="table-responsive">
+          <table class="table table-sm table-striped mb-0">
+            <thead class="table-light">
+              <tr>
+                <th style="width:60px">#</th>
+                <th style="width:140px">student_id</th>
+                <th>ชื่อผู้สมัคร</th>
+                <th style="min-width:280px">barcode</th>
+                <th style="width:160px">สถานะ</th>
+              </tr>
+            </thead>
+            <tbody>
+              <?php $i=1; foreach ($pv['rows'] as $r): ?>
+                <tr>
+                  <td><?= $i++ ?></td>
+                  <td class="code"><?= htmlspecialchars($r['student_id']) ?></td>
+                  <td><?= htmlspecialchars($r['student_name']) ?></td>
+                  <td class="code"><?= htmlspecialchars($r['barcode']) ?></td>
+                  <td>
+                    <?php if ($r['status']==='OK'): ?>
+                      <span class="badge bg-success badge-status">OK</span>
+                    <?php else: ?>
+                      <span class="badge bg-secondary badge-status">SKIP</span>
+                      <small class="text-muted d-block"><?= htmlspecialchars($r['reason']) ?></small>
+                    <?php endif; ?>
+                  </td>
+                </tr>
+              <?php endforeach; ?>
+            </tbody>
+          </table>
+        </div>
+        <div class="p-2 small text-muted">
+          ระบบจะอัปเดตเฉพาะรายการที่สถานะ <b>OK</b> เท่านั้น และจะอัปเดตเฉพาะแถวที่ <b>barcode ว่าง</b> ของกิจกรรมที่เลือก
         </div>
       </div>
     </div>
-  </div>
-</div>
+  <?php endif; ?>
 
-<?php include "footer.php"; ?>
+  <?php if ($updated || $skipped): ?>
+    <div class="card">
+      <div class="card-header">สรุปผลการอัปเดต</div>
+      <div class="card-body">
+        อัปเดตสำเร็จ: <strong><?= (int)$updated ?></strong> แถว<br>
+        ข้าม: <strong><?= (int)$skipped ?></strong> แถว
+      </div>
+    </div>
+  <?php endif; ?>
+
+</div>
+<script src="../assets/js/jquery/jquery.min.js"></script>
+<script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
