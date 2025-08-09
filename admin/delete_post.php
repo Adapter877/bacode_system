@@ -1,26 +1,19 @@
-<?php include "dbconfig.php"; 
+<?php
+include "../admin/dbconfig.php";
+session_start();
 
-
-
-$sql = "SELECT * FROM posts";
-
-$query = mysqli_query($conn,$sql);
-
-while ($row = mysqli_fetch_assoc($query)) {
-                                      
-    $posts_image =  $row['posts_image'];                                          
-  
- }
- $id = $_REQUEST['id'];
-
-echo $sql2 = "DELETE FROM posts WHERE posts_id='$id'";
-
-$query2 = mysqli_query($conn,$sql2);
-
-if ($query2) {
-    echo unlink($posts_image);
-    header('location:all_posts.php');
+if (!isset($_GET['id']) || !is_numeric($_GET['id'])) {
+    header("Location: all_posts.php");
+    exit();
 }
 
+$id = (int)$_GET['id'];
 
-?>
+// ใช้ prepared statement เพื่อความปลอดภัย
+$stmt = mysqli_prepare($conn, "DELETE FROM posts WHERE posts_id = ?");
+mysqli_stmt_bind_param($stmt, "i", $id);
+mysqli_stmt_execute($stmt);
+mysqli_stmt_close($stmt);
+
+header("Location: all_posts.php");
+exit();

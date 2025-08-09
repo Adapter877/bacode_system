@@ -4,31 +4,28 @@
 
         <!-- Start Dashboard -->
         <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">แดชบอร์ด</div>
-        <ul class="pcoded-item pcoded-left-item" item-border="true" item-border-style="none" subitem-border="true">
+        <ul class="pcoded-item pcoded-left-item">
             <li>
                 <a href="index.php">
-                    <span class="pcoded-micon"><i class="ti-home"></i><b></b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">แดชบอร์ด</span>
-                    <span class="pcoded-mcaret"></span>
+                    <span class="pcoded-micon"><i class="ti-home"></i></span>
+                    <span class="pcoded-mtext">แดชบอร์ด</span>
                 </a>
             </li>
         </ul>
 
         <!-- Start Posts -->
-        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">โพสต์ทั้งหมด</div>
-        <ul class="pcoded-item pcoded-left-item" item-border="true" item-border-style="none" subitem-border="true">
+        <div class="pcoded-navigatio-lavel">โพสต์ทั้งหมด</div>
+        <ul class="pcoded-item pcoded-left-item">
             <li>
                 <a href="all_posts.php">
-                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">โพสต์ทั้งหมด</span>
-                    <span class="pcoded-mcaret"></span>
+                    <span class="pcoded-micon"><i class="ti-layers"></i></span>
+                    <span class="pcoded-mtext">โพสต์ทั้งหมด</span>
                 </a>
             </li>
             <li>
                 <a href="add_post.php">
-                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">เพิ่มโพสต์</span>
-                    <span class="pcoded-mcaret"></span>
+                    <span class="pcoded-micon"><i class="ti-layers"></i></span>
+                    <span class="pcoded-mtext">เพิ่มโพสต์</span>
                 </a>
             </li>
         </ul>
@@ -36,8 +33,6 @@
         <?php
         if (isset($_SESSION['user_id'])) {
             $user_id = $_SESSION['user_id'];
-            
-            // เชื่อมต่อกับฐานข้อมูลและตรวจสอบ role
             $sql = "SELECT role FROM user_info WHERE id = ?";
             $stmt = mysqli_prepare($conn, $sql);
             mysqli_stmt_bind_param($stmt, "i", $user_id);
@@ -46,101 +41,55 @@
             mysqli_stmt_fetch($stmt);
             mysqli_stmt_close($stmt);
 
-            // ถ้า role = 3 ให้ทำการ redirect ไปหน้า index.php
             if ($role == 3) {
                 header("Location: ../index.php");
                 exit();
             }
         } else {
-            // ถ้าไม่พบ user_id ใน session ให้ redirect ไปหน้า login
             header("Location: login.php");
             exit();
         }
         ?>
 
-        <!-- Start Categories -->
-        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">หมวดหมู่</div>
-        <ul class="pcoded-item pcoded-left-item" item-border="true" item-border-style="none" subitem-border="true">
-            <li>
-                <a href="all_categories.php">
-                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">หมวดหมู่ทั้งหมด</span>
-                    <span class="pcoded-mcaret"></span>
-                </a>
-            </li>
-            <li>
-                <a href="add_categories.php">
-                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">เพิ่มหมวดหมู่</span>
-                    <span class="pcoded-mcaret"></span>
-                </a>
-            </li>
-        </ul>
-
-        <!-- Start Tags -->
-        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">แท็ก</div>
-        <ul class="pcoded-item pcoded-left-item" item-border="true" item-border-style="none" subitem-border="true">
-            <li>
-                <a href="all_tags.php">
-                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">แท็กทั้งหมด</span>
-                    <span class="pcoded-mcaret"></span>
-                </a>
-            </li>
-            <li>
-                <a href="add_tags.php">
-                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">เพิ่มแท็ก</span>
-                    <span class="pcoded-mcaret"></span>
-                </a>
-            </li>
-        </ul>
-
         <!-- Start Users -->
-        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">ผู้ใช้งาน</div>
-        <ul class="pcoded-item pcoded-left-item" item-border="true" item-border-style="none" subitem-border="true">
+        <div class="pcoded-navigatio-lavel">ผู้ใช้งาน</div>
+        <ul class="pcoded-item pcoded-left-item">
             <li>
                 <a href="all_users.php">
-                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">ผู้ใช้งานทั้งหมด</span>
-                    <span class="pcoded-mcaret"></span>
+                    <span class="pcoded-micon"><i class="ti-layers"></i></span>
+                    <span class="pcoded-mtext">ผู้ใช้งานทั้งหมด</span>
                 </a>
             </li>
             <li>
                 <a href="add_user.php">
-                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">เพิ่มผู้ใช้งาน</span>
-                    <span class="pcoded-mcaret"></span>
+                    <span class="pcoded-micon"><i class="ti-layers"></i></span>
+                    <span class="pcoded-mtext">เพิ่มผู้ใช้งาน</span>
                 </a>
             </li>
         </ul>
-        <div class="pcoded-navigatio-lavel" data-i18n="nav.category.forms" menu-title-theme="theme1">บาร์โค้ด</div>
-        <ul class="pcoded-item pcoded-left-item" item-border="true" item-border-style="none" subitem-border="true">
+
+        <!-- Start Barcodes -->
+        <div class="pcoded-navigatio-lavel">บาร์โค้ด</div>
+        <ul class="pcoded-item pcoded-left-item">
             <li>
                 <a href="all_bacode.php">
-                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">บาร์โค้ดทั้งหมด</span>
-                    <span class="pcoded-mcaret"></span>
+                    <span class="pcoded-micon"><i class="ti-layers"></i></span>
+                    <span class="pcoded-mtext">บาร์โค้ดทั้งหมด</span>
                 </a>
             </li>
             <li>
                 <a href="add_bacode.php">
-                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">เพิ่มบาร์โค้ดด้วย (PDF)</span>
-                    <span class="pcoded-mcaret"></span>
+                    <span class="pcoded-micon"><i class="ti-layers"></i></span>
+                    <span class="pcoded-mtext">เพิ่มบาร์โค้ดด้วย (PDF)</span>
                 </a>
             </li>
             <li>
                 <a href="from_bacode.php">
-                    <span class="pcoded-micon"><i class="ti-layers"></i><b>FC</b></span>
-                    <span class="pcoded-mtext" data-i18n="nav.form-components.main">เพิ่มบาร์โค้ด</span>
-                    <span class="pcoded-mcaret"></span>
+                    <span class="pcoded-micon"><i class="ti-layers"></i></span>
+                    <span class="pcoded-mtext">เพิ่มบาร์โค้ด</span>
                 </a>
             </li>
         </ul>
 
     </div>
-
-    </div>
-    
 </nav>
