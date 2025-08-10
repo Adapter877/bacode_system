@@ -11,6 +11,7 @@ RUN apt-get update && \
 # Enable Apache mod_rewrite
 RUN a2enmod rewrite
 RUN docker-php-ext-install mysqli
+RUN apt-get update && apt-get install -y poppler-utils
 # Set the working directory
 WORKDIR /var/www/html
 # Define build-time argument for LATEST_TAG

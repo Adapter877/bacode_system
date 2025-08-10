@@ -1,25 +1,46 @@
 <?php
 session_start();
+require_once __DIR__ . '/admin/dbconfig.php';
 
-// ดึงจาก Session
-$role_raw = $_SESSION['role'] ?? null;
-$role_str = isset($role_raw) ? trim((string)$role_raw) : '';
-$isAdmin  = ($role_str === '0' || (is_int($role_raw) && $role_raw === 0)); // เผื่อบางระบบเก็บเป็น int 0
+/* ----- ดึงข้อมูล user + role สดจาก DB ทุกครั้ง (กันคา session เก่า) ----- */
 $username = $_SESSION['username'] ?? null;
+if (isset($_SESSION['user_id'])) {
+    $uid = (int)$_SESSION['user_id'];
+    if ($st = mysqli_prepare($conn, "SELECT username, role, name, email, student_id, major FROM user_info WHERE id=? LIMIT 1")) {
+        mysqli_stmt_bind_param($st, "i", $uid);
+        mysqli_stmt_execute($st);
+        $rs = mysqli_stmt_get_result($st);
+        if ($row = mysqli_fetch_assoc($rs)) {
+            // sync session ให้เป็นค่าล่าสุด
+            $_SESSION['username']   = $row['username'] ?? $_SESSION['username'] ?? null;
+            $_SESSION['role']       = (int)($row['role'] ?? $_SESSION['role'] ?? -1);
+            $_SESSION['full_name']  = $row['name'] ?? $_SESSION['full_name'] ?? '';
+            $_SESSION['email']      = $row['email'] ?? $_SESSION['email'] ?? '';
+            $_SESSION['student_id'] = $row['student_id'] ?? $_SESSION['student_id'] ?? '';
+            $_SESSION['major']      = $row['major'] ?? $_SESSION['major'] ?? '';
+            $username               = $_SESSION['username'];
+        }
+        mysqli_stmt_close($st);
+    }
+}
 
+/* ----- คำนวณสิทธิ์ ----- */
+$role_val   = isset($_SESSION['role']) ? (int)$_SESSION['role'] : null;
+$isAdmin    = ($role_val === 0);
+$isReporter = ($role_val === 4);
+
+/* ----- helpers ----- */
 function make_initials($str) {
     $s = trim($str ?? '');
     if ($s === '') return 'U';
     $parts = preg_split('/\s+/', $s);
-    if (count($parts) >= 2) {
-        return mb_strtoupper(mb_substr($parts[0], 0, 1) . mb_substr(end($parts), 0, 1));
-    }
-    return mb_strtoupper(mb_substr($s, 0, 2));
+    if (count($parts) >= 2) return mb_strtoupper(mb_substr($parts[0],0,1).mb_substr(end($parts),0,1));
+    return mb_strtoupper(mb_substr($s,0,2));
 }
 $display_name = $username ?: 'User';
 $initials     = make_initials($display_name);
 
-// ตั้ง title ตามไฟล์
+/* ----- ตั้ง title ----- */
 $page = current(explode('.', basename($_SERVER['PHP_SELF'])));
 if     ($page == 'index')        $active_title = "Blog by Arif";
 elseif ($page == 'about')        $active_title = "About Us";
@@ -35,14 +56,13 @@ else                             $active_title = basename($_SERVER['PHP_SELF']);
 <html lang="th">
   <head>
     <meta charset="utf-8">
-    <title><?php echo $active_title; ?></title>
+    <title><?php echo htmlspecialchars($active_title); ?></title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/fontawesome.css">
     <link rel="stylesheet" href="assets/css/templatemo-stand-blog.css">
     <link rel="stylesheet" href="assets/css/owl.css">
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
-
     <style>
       .background-header .navbar { min-height: 64px; }
       .background-header .navbar .container { display:flex; align-items:center; }
@@ -60,9 +80,9 @@ else                             $active_title = basename($_SERVER['PHP_SELF']);
       .profile-grid .value{ color:#111827; word-break:break-word; }
       .dropdown-menu.profile-menu .dropdown-item{ padding:.5rem .6rem; border-radius:.375rem; }
       .dropdown-menu.profile-menu .dropdown-divider{ margin:.5rem 0; }
+      .nav-report .nav-link { font-weight:600; }
     </style>
   </head>
-
   <body>
     <header class="background-header">
       <nav class="navbar navbar-expand-lg">
@@ -83,11 +103,17 @@ $active_blog  = (basename($_SERVER['PHP_SELF']) == 'blog.php')  ? 'active' : '';
               <li class="nav-item <?php echo $active_about; ?>"><a class="nav-link" href="about.php">ค้นหากิจกรรม</a></li>
               <li class="nav-item <?php echo $active_blog; ?>"><a class="nav-link" href="blog.php">ลงทะเบียนกิจกรรม</a></li>
 
-<?php if (!$username): ?>
-              <li class="nav-item"><a class="nav-link" href="admin/login.php">เข้าสู่ระบบ</a></li>
-<?php else: ?>
+<?php if ($username): ?>
   <?php if ($isAdmin): ?>
               <li class="nav-item"><a class="nav-link" href="admin/">จัดการข้อมูล</a></li>
+  <?php endif; ?>
+
+  <?php if ($isReporter): ?>
+              <li class="nav-item nav-report">
+                <a class="nav-link text-warning" href="report.php">
+                  <i class="fa fa-bar-chart"></i>&nbsp;รายงาน
+                </a>
+              </li>
   <?php endif; ?>
 
               <li class="nav-item dropdown">
@@ -118,14 +144,14 @@ $active_blog  = (basename($_SERVER['PHP_SELF']) == 'blog.php')  ? 'active' : '';
                   <a class="dropdown-item text-danger" href="log_out.php">ออกจากระบบ</a>
                 </div>
               </li>
+<?php else: ?>
+              <li class="nav-item"><a class="nav-link" href="admin/login.php">เข้าสู่ระบบ</a></li>
 <?php endif; ?>
             </ul>
           </div>
         </div>
       </nav>
     </header>
-
-    <?php include "admin/dbconfig.php"; ?>
 
     <script src="assets/js/jquery/jquery.min.js"></script>
     <script src="vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
