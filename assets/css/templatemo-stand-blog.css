@@ -55,14 +55,51 @@ h1,h2,h3,h4,h5,h6 {
 }
 
 .page-heading {
-	margin: 0px 10px;
-	padding: 120px 0px;
-	text-align: left;
-	background-position: center center;
-	background-repeat: no-repeat;
-	background-size: cover;
-	background-image: url(../images/heading-bg.jpg);
+  margin: 0px 10px;
+  padding: 160px 0;
+  text-align: left;
+  background-position: var(--hero-x, 72%) var(--hero-y, 58%);
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-image: url('../images/hero_focus_faculty.jpg');
+  position: relative;
+  overflow: hidden;
+
+  /* โฟกัสเริ่มต้น (เดสก์ท็อปกลางๆ) */
+  --hero-x: 72%;    /* 0% = ซ้าย, 100% = ขวา */
+  --hero-y: 58%;    /* 0% = บน,  100% = ล่าง */
 }
+
+/* ไล่ย้ายจุดโฟกัสตามขนาดจอเพื่อ “เล็ง” ป้ายให้พอดี */
+@media (min-width: 1600px){
+  .page-heading{ --hero-x: 68%; --hero-y: 55%; padding: 180px 0; }
+}
+@media (min-width: 1200px) and (max-width: 1599px){
+  .page-heading{ --hero-x: 62%; --hero-y: 58%; padding: 170px 0; }
+}
+@media (min-width: 992px) and (max-width: 1199px){
+  .page-heading{ --hero-x: 74%; --hero-y: 60%; padding: 160px 0; }
+}
+@media (min-width: 768px) and (max-width: 991px){
+  .page-heading{ --hero-x: 76%; --hero-y: 53%; padding: 150px 0; }
+}
+@media (max-width: 767px){
+  .page-heading{ --hero-x: 70%; --hero-y: 40%; padding: 130px 0; }
+}
+
+/* ทำให้ตัวอักษรอ่านง่ายขึ้น (ไล่โทนจากด้านบน) */
+.page-heading::before{
+  content:"";
+  position:absolute; inset:0;
+  background: linear-gradient(
+     rgba(0,0,0,.35),
+     rgba(0,0,0,.15) 40%,
+     rgba(0,0,0,0)   70%
+  );
+  pointer-events:none;
+}
+
+
 
 .page-heading .text-content h4 {
 	color: #f48840;
