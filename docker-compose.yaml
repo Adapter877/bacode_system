@@ -5,6 +5,7 @@ services:
     build:
       context: .
     container_name: php_web
+    restart: always
     ports:
       - "80:80"
     volumes:
