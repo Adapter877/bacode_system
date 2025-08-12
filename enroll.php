@@ -38,11 +38,7 @@ if ($post_id > 0) {
     $activity_name = $post['posts_title'] ?? '';
 }
 
-/* ---------- เมื่อ submit ฟอร์ม -> บันทึกลงตาราง student_activities ---------- */
-$error = "";
-$success = "";
-
-/* สาขา วทบ. URU */
+/* ---------- ค่าคงที่สาขา คณะวิทยาศาสตร์ ---------- */
 $majors_all = [
     "วิทยาการคอมพิวเตอร์",
     "เทคโนโลยีสารสนเทศ",
@@ -59,39 +55,43 @@ $majors_all = [
     "เทคโนโลยีการอาหาร",
 ];
 
+$error = "";
+$success = "";
+
+/* ---------- Submit -> บันทึก ---------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
     $student_name_f  = trim($_POST['student_name']  ?? $name);
     $student_id_f    = trim($_POST['student_id']    ?? $student_id);
     $major_f         = trim($_POST['major']         ?? $major);
     $activity_name_f = trim($_POST['activity_name'] ?? $activity_name);
-    $activity_hours  = floatval($_POST['activity_hours'] ?? 0);
     $contact         = trim($_POST['contact']       ?? $email);
-    $date_joined     = trim($_POST['date_joined']   ?? date('Y-m-d'));
 
-    // ตรวจฟิลด์จำเป็น
-    if ($student_name_f === '' || $student_id_f === '' || $activity_name_f === '' || $activity_hours <= 0) {
-        $error = "กรุณากรอกข้อมูลให้ครบถ้วน และชั่วโมงกิจกรรมต้องมากกว่า 0";
+    if ($student_name_f === '' || $student_id_f === '' || $activity_name_f === '') {
+        $error = "กรุณากรอกข้อมูลให้ครบถ้วน";
     } elseif (!in_array($major_f, $majors_all, true)) {
         $error = "กรุณาเลือกสาขาวิชาที่ถูกต้อง";
     } else {
-        // Flow ใหม่: สมัครไว้ก่อน ยังไม่กำหนด barcode
-        $barcode = ""; // เก็บค่าว่างไว้ รออัปเดตภายหลัง
+        // ไม่รับชั่วโมงกิจกรรมจากผู้ใช้ -> ตั้งเป็น 0
+        $activity_hours = 0;
+        // barcode เว้นว่าง รออัปเดตภายหลัง
+        $barcode = "";
 
-        $sql_ins = "INSERT INTO student_activities 
+        /* บันทึก date_joined เป็นเวลาปัจจุบัน (TIMESTAMP/DATETIME) ด้วย NOW() */
+        $sql_ins = "INSERT INTO student_activities
             (student_name, student_id, major, activity_name, activity_hours, barcode, contact, date_joined)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+            VALUES (?, ?, ?, ?, ?, ?, ?, NOW())";
         $stmt = mysqli_prepare($conn, $sql_ins);
         if ($stmt === false) {
             $error = "ไม่สามารถบันทึกข้อมูล (เตรียมคำสั่งล้มเหลว): " . mysqli_error($conn);
         } else {
             mysqli_stmt_bind_param(
                 $stmt,
-                "ssssisss",
-                $student_name_f, $student_id_f, $major_f, $activity_name_f, $activity_hours, $barcode, $contact, $date_joined
+                "ssssiss",
+                $student_name_f, $student_id_f, $major_f, $activity_name_f, $activity_hours, $barcode, $contact
             );
             if (mysqli_stmt_execute($stmt)) {
                 $success = "บันทึกข้อมูลเรียบร้อย";
-                echo "<script>setTimeout(function(){ window.location='about.php'; }, 1000);</script>";
+                echo "<script>setTimeout(function(){ window.location='about.php'; }, 900);</script>";
             } else {
                 $error = "ไม่สามารถบันทึกข้อมูล: " . mysqli_error($conn);
             }
@@ -104,7 +104,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
 include "header.php";
 ?>
 <style>
-/* Sticky footer */
 html, body { height: 100%; }
 .main-wrapper{ display:flex; flex-direction:column; min-height:100vh; }
 .content-wrapper{ flex:1; display:flex; align-items:center; justify-content:center; }
@@ -149,12 +148,12 @@ html, body { height: 100%; }
                     <label>สาขาวิชา</label>
                     <select name="major" class="form-control" required>
                       <option value="">-- เลือกสาขาวิชา --</option>
-                      <?php
-                        foreach ($majors_all as $m) {
-                            $selected = ($major === $m) ? 'selected' : '';
-                            echo '<option value="'.htmlspecialchars($m).'" '.$selected.'>'.$m.'</option>';
-                        }
-                      ?>
+                      <?php foreach ($majors_all as $m): ?>
+                        <option value="<?php echo htmlspecialchars($m); ?>"
+                          <?php echo ($major === $m) ? 'selected' : ''; ?>>
+                          <?php echo htmlspecialchars($m); ?>
+                        </option>
+                      <?php endforeach; ?>
                     </select>
                   </div>
                   <div class="form-group col-md-6">
@@ -170,18 +169,9 @@ html, body { height: 100%; }
                          value="<?php echo htmlspecialchars($activity_name); ?>" readonly>
                 </div>
 
-                <div class="form-row">
-                  <div class="form-group col-md-6 col-lg-4">
-                    <label>ชั่วโมงกิจกรรม</label>
-                    <input type="number" step="0.5" min="0.5" name="activity_hours" class="form-control"
-                           placeholder="เช่น 2" required>
-                  </div>
-                  <div class="form-group col-md-6 col-lg-4">
-                    <label>วันที่เข้าร่วม</label>
-                    <input type="date" name="date_joined" class="form-control"
-                           value="<?php echo date('Y-m-d'); ?>" required>
-                  </div>
-                  <!-- ตัดช่องกรอกบาร์โค้ดออก ตาม Flow ใหม่ -->
+                <!-- เอาช่อง 'ชั่วโมงกิจกรรม' ออก และ 'วันที่เข้าร่วม' ใช้เวลาปัจจุบันอัตโนมัติ -->
+                <div class="small text-muted mb-3">
+                  ระบบจะบันทึก <strong>วันที่/เวลาเข้าร่วม</strong> เป็นเวลาปัจจุบันอัตโนมัติเมื่อกดยืนยัน
                 </div>
 
                 <div class="d-flex justify-content-between">
