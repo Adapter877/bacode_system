@@ -60,7 +60,7 @@ else                             $active_title = basename($_SERVER['PHP_SELF']);
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="assets/css/fontawesome.css">
-    <link rel="stylesheet" href="assets/css/templatemo-stand-blog.css">
+    <link rel="stylesheet" href="assets/css/templatemo-stand-blog.css?v=20240812">
     <link rel="stylesheet" href="assets/css/owl.css">
     <link rel="shortcut icon" href="favicon.ico" type="image/x-icon">
     <style>
