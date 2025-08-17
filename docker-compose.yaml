@@ -7,7 +7,7 @@ services:
     container_name: php_web
     restart: always
     ports:
-      - "80:80"
+      - "8082:80"
     volumes:
       - ./:/var/www/html
     depends_on:

@@ -21,44 +21,68 @@ if (isset($_POST['submit'])) {
     }
 
     // อัปโหลดรูป (เลือกได้ ไม่บังคับ)
-    $loc = '';
-    if (!empty($_FILES['posts_image']['name'])) {
-        $image_name = $_FILES['posts_image']['name'];
-        $image_tmp  = $_FILES['posts_image']['tmp_name'];
-        $image_size = intval($_FILES['posts_image']['size']);
+$loc = '';
 
-        // ตรวจชนิดไฟล์ จากนามสกุล + mime
-        $ext = strtolower(pathinfo($image_name, PATHINFO_EXTENSION));
-        $allowed_ext = ["jpg","jpeg","png","webp"];
-        if (!in_array($ext, $allowed_ext, true)) {
-            $errors[] = "นามสกุลไฟล์ไม่รองรับ (รองรับ: jpg, jpeg, png, webp)";
-        }
+if (isset($_FILES['posts_image']) && $_FILES['posts_image']['error'] !== UPLOAD_ERR_NO_FILE) {
+    $file = $_FILES['posts_image'];
 
-        if ($image_size > 2 * 1024 * 1024) {
+    // 1) เช็กสถานะอัปโหลด
+    if ($file['error'] !== UPLOAD_ERR_OK) {
+        $map = [
+            UPLOAD_ERR_INI_SIZE   => "ไฟล์ใหญ่กว่า upload_max_filesize ใน php.ini",
+            UPLOAD_ERR_FORM_SIZE  => "ไฟล์ใหญ่กว่า limit ของฟอร์ม",
+            UPLOAD_ERR_PARTIAL    => "อัปโหลดไม่สมบูรณ์",
+            UPLOAD_ERR_NO_FILE    => "ไม่ได้เลือกไฟล์",
+            UPLOAD_ERR_NO_TMP_DIR => "ไม่มีโฟลเดอร์ temp",
+            UPLOAD_ERR_CANT_WRITE => "เขียนไฟล์ไม่สำเร็จ",
+            UPLOAD_ERR_EXTENSION  => "ส่วนขยาย PHP บางตัวบล็อกไว้",
+        ];
+        $errors[] = $map[$file['error']] ?? "อัปโหลดไฟล์ล้มเหลว (รหัส {$file['error']})";
+    } else {
+        // 2) จำกัดขนาดไฟล์ (2MB)
+        if ($file['size'] > 2 * 1024 * 1024) {
             $errors[] = "ขนาดไฟล์รูปภาพต้องไม่เกิน 2MB";
         }
 
-        if (!$errors) {
-            // สร้างชื่อไฟล์ใหม่ ป้องกันชนกัน
-            $safeBase = preg_replace('/[^A-Za-z0-9_\-]/', '_', pathinfo($image_name, PATHINFO_FILENAME));
-            $newName  = $safeBase . '_' . date('Ymd_His') . '_' . bin2hex(random_bytes(4)) . '.' . $ext;
+        // 3) ตรวจ MIME จริงของไฟล์
+        $finfo = new finfo(FILEINFO_MIME_TYPE);
+        $mime  = $finfo->file($file['tmp_name']);
+        $allowedMime = [
+            'image/jpeg' => 'jpg',
+            'image/png'  => 'png',
+            'image/webp' => 'webp',
+        ];
+        if (!isset($allowedMime[$mime])) {
+            $errors[] = "ไฟล์รูปภาพไม่รองรับ (รองรับ: JPG, PNG, WEBP)";
+        }
 
-            // โฟลเดอร์ปลายทาง
-            $uploadDir = __DIR__ . "/uploads";
+        // 4) ย้ายไฟล์เข้า /admin/uploads แล้วเก็บพาธแบบ relative
+        if (!$errors) {
+            $ext     = $allowedMime[$mime];
+            $newName = sprintf('post_%s_%s.%s', date('Ymd_His'), bin2hex(random_bytes(4)), $ext);
+
+            $uploadDir = __DIR__ . "/uploads";   // => /admin/uploads
             if (!is_dir($uploadDir)) {
-                @mkdir($uploadDir, 0755, true);
+                if (!mkdir($uploadDir, 0755, true)) {
+                    $errors[] = "สร้างโฟลเดอร์ uploads ไม่ได้";
+                }
             }
 
-            $locRel = "uploads/" . $newName;               // path relative เก็บใน DB
-            $locAbs = $uploadDir . "/" . $newName;         // path จริง
+            if (!$errors) {
+                $locRel = "uploads/" . $newName;        // เก็บใน DB
+                $locAbs = $uploadDir . "/" . $newName;  // ย้ายไฟล์จริง
 
-            if (!move_uploaded_file($image_tmp, $locAbs)) {
-                $errors[] = "อัปโหลดรูปภาพไม่สำเร็จ";
-            } else {
-                $loc = $locRel;
+                if (!move_uploaded_file($file['tmp_name'], $locAbs)) {
+                    $errors[] = "อัปโหลดรูปภาพไม่สำเร็จ";
+                } else {
+                    @chmod($locAbs, 0644);
+                    $loc = $locRel;
+                }
             }
         }
     }
+}
+
 
     // บันทึก DB
     if (!$errors) {
