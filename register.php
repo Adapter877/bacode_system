@@ -89,7 +89,26 @@ if (isset($_POST['submit'])) {
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- Custom Style -->
-    <link rel="stylesheet" type="text/css" href="style.css">
+    <!-- Custom Style (inline) -->
+    <style>
+    select,
+    .choices__inner,
+    .choices__list--dropdown,
+    .choices__list[aria-expanded] {
+      background-color: #64748b !important;
+      color: #fff !important;
+      border-radius: 0.5rem !important;
+      border: 1px solid #64748b !important;
+    }
+    .choices__item--selectable.is-highlighted,
+    .choices__item--selectable:hover {
+      background-color: #374151 !important;
+      color: #fff !important;
+    }
+    .choices__placeholder {
+      color: #94a3b8 !important;
+    }
+    </style>
 </head>
 <body style="background-color: #1f2937; background-size: cover; background-position: center; background-attachment: fixed;" class="min-h-screen flex items-center justify-center text-white">
 <center>
