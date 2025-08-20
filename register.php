@@ -31,9 +31,7 @@ $confirm    = trim($_POST['confirm']     ?? '');
 
 /* เมื่อกด submit */
 if (isset($_POST['submit'])) {
-    if (strlen($password) < 8) {
-        $error = "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
-    } elseif ($password !== $confirm) {
+    if ($password !== $confirm) {
         $error = "รหัสผ่านไม่ตรงกัน";
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $error = "อีเมลไม่ถูกต้อง";
@@ -42,34 +40,40 @@ if (isset($_POST['submit'])) {
     } elseif (!in_array($major, $majors_all, true)) {
         $error = "กรุณาเลือกสาขาให้ถูกต้องตามรายการที่กำหนด";
     } else {
-        // ตรวจ username ซ้ำ
-        $check_sql = "SELECT 1 FROM user_info WHERE username = ?";
-        $stmt = mysqli_prepare($conn, $check_sql);
-        mysqli_stmt_bind_param($stmt, "s", $username);
-        mysqli_stmt_execute($stmt);
-        $result = mysqli_stmt_get_result($stmt);
-
-        if ($result && mysqli_num_rows($result) > 0) {
-            $error = "ชื่อผู้ใช้งานนี้ถูกใช้แล้ว";
-            mysqli_stmt_close($stmt);
+        // เช็กความยาวรหัสผ่านอย่างน้อย 8 ตัวอักษร
+        if (strlen($password) < 8) {
+            $error = "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
         } else {
-            mysqli_stmt_close($stmt);
-            $hash = password_hash($password, PASSWORD_DEFAULT);
+            // ใช้ MD5 ตามที่ร้องขอ (หมายเหตุ: ไม่ปลอดภัยสำหรับโปรดักชัน)
+            $pass = md5($password);
             $role = 3; // นักศึกษา
             $created_at = date('Y-m-d H:i:s');
 
-            $insert_sql = "INSERT INTO user_info (username, password, email, name, role, created_at, student_id, major)
-                           VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-            $stmt = mysqli_prepare($conn, $insert_sql);
-            mysqli_stmt_bind_param($stmt, "ssssisss", $username, $hash, $email, $name, $role, $created_at, $student_id, $major);
+            // ตรวจ username ซ้ำ
+            $check_sql = "SELECT 1 FROM user_info WHERE username = ?";
+            $stmt = mysqli_prepare($conn, $check_sql);
+            mysqli_stmt_bind_param($stmt, "s", $username);
+            mysqli_stmt_execute($stmt);
+            $result = mysqli_stmt_get_result($stmt);
 
-            if (mysqli_stmt_execute($stmt)) {
+            if ($result && mysqli_num_rows($result) > 0) {
+                $error = "ชื่อผู้ใช้งานนี้ถูกใช้แล้ว";
                 mysqli_stmt_close($stmt);
-                header('Location: login.php');
-                exit();
             } else {
-                $error = "เกิดข้อผิดพลาด: " . mysqli_error($conn);
                 mysqli_stmt_close($stmt);
+
+                $insert_sql = "INSERT INTO user_info (username, password, email, name, role, created_at) VALUES (?, ?, ?, ?, ?, ?)";
+                $stmt = mysqli_prepare($conn, $insert_sql);
+                mysqli_stmt_bind_param($stmt, "ssssis", $username, $pass, $email, $name, $role, $created_at);
+
+                if (mysqli_stmt_execute($stmt)) {
+                    mysqli_stmt_close($stmt);
+                    header('Location: login.php');
+                    exit();
+                } else {
+                    $error = "เกิดข้อผิดพลาด: " . mysqli_error($conn);
+                    mysqli_stmt_close($stmt);
+                }
             }
         }
     }
