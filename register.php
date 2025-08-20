@@ -62,9 +62,10 @@ if (isset($_POST['submit'])) {
             } else {
                 mysqli_stmt_close($stmt);
 
-                $insert_sql = "INSERT INTO user_info (username, password, email, name, role, created_at) VALUES (?, ?, ?, ?, ?, ?)";
+                $insert_sql = "INSERT INTO user_info (username, password, email, name, role, created_at, student_id, major)
+                               VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                 $stmt = mysqli_prepare($conn, $insert_sql);
-                mysqli_stmt_bind_param($stmt, "ssssis", $username, $pass, $email, $name, $role, $created_at);
+                mysqli_stmt_bind_param($stmt, "ssssisss", $username, $pass, $email, $name, $role, $created_at, $student_id, $major);
 
                 if (mysqli_stmt_execute($stmt)) {
                     mysqli_stmt_close($stmt);
