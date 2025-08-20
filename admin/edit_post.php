@@ -15,15 +15,8 @@ while ($row = mysqli_fetch_assoc($query0)) {
     $tag_name =  $row['tag_name'];                                          
                                         
 }                                      
+
  
-$sql = "SELECT * FROM categories";
-
-$query = mysqli_query($conn,$sql);
-
-$sql1 = "SELECT * FROM tags";
-
-$query1 = mysqli_query($conn,$sql1);
-
 $error=array();
 
 if (isset($_POST['submit'])) {
@@ -31,8 +24,6 @@ if (isset($_POST['submit'])) {
     $author =mysqli_real_escape_string($conn,$_POST['author']);
     $posts_title  =mysqli_real_escape_string($conn,$_POST['posts_title']);
     $posts_content  =mysqli_real_escape_string($conn,$_POST['posts_content']);
-    $category_name  =mysqli_real_escape_string($conn,$_POST['category_name']);
-    $tag_name  =mysqli_real_escape_string($conn,$_POST['tag_name']);
 
 
     $image_name  =$_FILES['posts_image']['name'];
@@ -42,7 +33,7 @@ if (isset($_POST['submit'])) {
 
     if (empty($image_name)) {
 
-        $sql3 = "UPDATE posts SET posts_title='$posts_title',posts_content='$posts_content',category_name='$category_name',tag_name ='$tag_name',author ='$author' WHERE  posts_id = '$request_id'";
+        $sql3 = "UPDATE posts SET posts_title='$posts_title',posts_content='$posts_content',author ='$author' WHERE  posts_id = '$request_id'";
           
 
         $query3 = mysqli_query($conn,$sql3);
@@ -89,7 +80,7 @@ else{
     
 
        
-        $sql3 = "UPDATE posts SET posts_title='$posts_title',posts_content='$posts_content',posts_image='$loc',category_name='$category_name',tag_name ='$tag_name',author ='$author' WHERE  posts_id = '$request_id'";  
+        $sql3 = "UPDATE posts SET posts_title='$posts_title',posts_content='$posts_content',posts_image='$loc',author ='$author' WHERE  posts_id = '$request_id'";  
 
             $query3 = mysqli_query($conn,$sql3);
 
@@ -160,64 +151,6 @@ else{
                                                             data-ms-editor="true">
                                                     </div>
 
-                                                </div>
-                                                <div class="form-group row">
-                                                    <label class="col-sm-2 col-form-label">Select Category</label>
-                                                    <div class="col-sm-10">
-                                                        <select name="category_name" class="form-control">
-                                                            <option value="opt1" selected >Select One Value Only
-                                                            </option>
-                                                            <?php 
-                                                    
-                                                    while ($row = mysqli_fetch_assoc($query)) {
-                                                        $name =  $row['category_name'];     
-
-                                                    ?>
-                                                    <?php 
-                                                        if ($name == $category_name) {
-                                                           
-                                                            $class = "selected";
-                                                            }
-                                                            else{
-
-                                                                $class = "";
-                                                            }
-                                                    ?>
-                                                            
-                                                            <option <?php echo $class; ?> name="<?php echo $name;?>"
-                                                                value="<?php echo $name;?>"><?php echo $name;?></option>
-                                                    <?php  } ?>
-                                                        </select>
-                                                    </div>
-                                                </div>
-
-                                                <div class="form-group row">
-                                                    <label class="col-sm-2 col-form-label">Select tag</label>
-                                                    <div class="col-sm-10">
-                                                        <select name="tag_name" class="form-control">
-                                                            <option value="opt1" selected disabled>Select One Value Only
-                                                            </option>
-                                                            <?php 
-                                                                    $i=1;
-                                                                    while ($row = mysqli_fetch_assoc($query1)) {
-                                                                        $name =  $row['name'];
-                                                                    ?>
-                                                                     <?php 
-                                                        if ($name == $tag_name) {
-                                                           
-                                                            $class = "selected";
-                                                            }
-                                                            else{
-
-                                                                $class = "";
-                                                            }
-                                                    ?>
-
-                                                            <option <?php echo $class; ?> name="<?php echo $name;?>"
-                                                                value="<?php echo $name;?>"><?php echo $name;?></option>
-                                                            <?php } ?>
-                                                        </select>
-                                                    </div>
                                                 </div>
 
 
