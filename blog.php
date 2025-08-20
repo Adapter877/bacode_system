@@ -120,7 +120,6 @@
             <div class="post-options">
               <div class="d-flex justify-content-between align-items-center">
                 <ul class="post-tags">
-                  <li><i class="fa fa-tags"></i></li>
                   <li>
                     <a href="tag.php?tag=<?php echo urlencode($tag_name); ?>"><?php echo htmlspecialchars($tag_name); ?></a>
                   </li>
