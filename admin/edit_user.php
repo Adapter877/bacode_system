@@ -75,7 +75,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['submit'])) {
     if ($error === '') {
         // สร้าง SQL แบบมีเงื่อนไข ถ้าระบุรหัสผ่านใหม่จึงเซ็ต
         if ($password !== '') {
-            $hash = password_hash($password, PASSWORD_DEFAULT);
+            $hash = md5($password);
             $sql = "UPDATE user_info
                        SET name = ?, username = ?, email = ?, password = ?, role = ?
                      WHERE id = ?";
